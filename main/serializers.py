@@ -1,6 +1,5 @@
 
-from django.db import models
-from rest_framework import fields, serializers
+from rest_framework import serializers
 
 
 from .models import Customer, Order
@@ -12,20 +11,22 @@ class OrderSerilizer(serializers.ModelSerializer):
 
 
 class CustomerSerilizer(serializers.ModelSerializer):
-    orders = OrderSerilizer(many=True, read_only=False)
+    orders = OrderSerilizer(required=False, many=True, read_only=False, allow_null=True )
 
     class Meta:
         model = Customer
         fields = ('customerId', 'name', 'address', 'phone', 'email', 'orders')
 
     def create(self, validated_data):
-        #get order from the request body
-        orders = validated_data.pop('orders') 
         # save customer
         customer = Customer.objects.create(**validated_data) 
-        # save order list 
-        for orders in orders:
-            Order.objects.create(customerId=customer, **orders)
+
+        #get order from the request body if exists 
+        if('orders' in validated_data):
+            orders = validated_data.pop('orders') 
+            # save order list 
+            for order in orders:
+                Order.objects.create(customerId=customer, **order)
 
         return customer
 

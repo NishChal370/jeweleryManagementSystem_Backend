@@ -12,7 +12,7 @@ from main.serializers import CustomerSerilizer, OrderSerilizer
 def index(response):
     return HttpResponse("Hello from API")
 
-#get customer with their order
+#get customer with their orders
 @api_view(['GET'])
 def customerList(request):
     customer = Customer.objects.all()
