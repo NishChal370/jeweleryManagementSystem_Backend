@@ -1,8 +1,9 @@
 
+from django.db.models import fields
 from rest_framework import serializers
 
 
-from .models import Customer, Order
+from .models import Bill, Customer, Order
 
 class OrderSerilizer(serializers.ModelSerializer):
     class Meta:
@@ -36,3 +37,8 @@ class CustomerSerilizer(serializers.ModelSerializer):
 
         return customer
 
+
+class BillSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Bill
+        fields = '__all__'

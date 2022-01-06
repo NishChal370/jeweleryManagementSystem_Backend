@@ -1,12 +1,13 @@
 
 from django.http.response import HttpResponse
 
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.utils import serializer_helpers
 
-from main.models import Customer, Order
-from main.serializers import CustomerSerilizer, OrderSerilizer
+from main.models import Customer, Order, Bill
+from main.serializers import BillSerilizer, CustomerSerilizer, OrderSerilizer
 
 # Create your views here.
 def index(response):
@@ -66,3 +67,12 @@ def placeOrder(request):
         return Response(newOrder.data)
     else:
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#Get all bills
+@api_view(['GET'])
+def bills(request):
+    bills = Bill.objects.all()
+    serializer = BillSerilizer(bills, many=True)
+
+    return Response(serializer.data)

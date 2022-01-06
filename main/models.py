@@ -27,3 +27,28 @@ class Order(models.Model):
 
     def __str__(self):
         return f'{self.orderId}'
+
+
+class Bill(models.Model):
+    bill_status = [
+        ('D','Draft'),
+        ('S','Submitted')
+    ]
+
+    billId =  models.AutoField(primary_key=True, null=False)
+    orderId = models.ForeignKey(Order, null=True, on_delete=CASCADE, related_name='customerOrder')
+    customerId = models.ForeignKey(Customer, null=True, on_delete=CASCADE, related_name='customerBill')
+    date = models.DateField(null=False)
+    rate = models.IntegerField(null=True)
+    customerProductWeight = models.IntegerField(null=True)
+    customerProductAmount = models.IntegerField(null=True)
+    totalAmount = models.IntegerField(null=True)
+    discount = models.IntegerField(null=True)
+    grandTotalAmount = models.IntegerField(null=True)
+    advanceAmount = models.IntegerField(null=True)
+    payedAmount = models.IntegerField(null=True)
+    remainingAmount = models.IntegerField(null=True)
+    status = models.CharField(max_length=11, null=False, choices=bill_status, default='Submitted')
+
+    def __str__(self):
+        return f'{self.billId}'
