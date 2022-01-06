@@ -25,7 +25,7 @@ def customerList(request):
 #register customer with order (place order)
 def placeCustomerOrder(request):
     newCustomerOrder = CustomerSerilizer(data= request.data)
-    
+
     if newCustomerOrder.is_valid():
         newCustomerOrder.save()
 

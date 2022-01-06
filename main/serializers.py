@@ -16,17 +16,23 @@ class CustomerSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ('customerId', 'name', 'address', 'phone', 'email', 'orders')
+        
+    def validate(self, value):
+        if 'orders' not in value and 'bills' not in value:
+            raise serializers.ValidationError({'data':'Customer must have order or bill.'})
+        
+        return value
 
-    def create(self, validated_data):
+    def create(self, validated_data):     
+        #get order from the request body
+        orders = validated_data.pop('orders') 
+
         # save customer
         customer = Customer.objects.create(**validated_data) 
 
-        #get order from the request body if exists 
-        if('orders' in validated_data):
-            orders = validated_data.pop('orders') 
-            # save order list 
-            for order in orders:
-                Order.objects.create(customerId=customer, **order)
+        # save order list 
+        for order in orders:
+            Order.objects.create(customerId=customer, **order)
 
         return customer
 
