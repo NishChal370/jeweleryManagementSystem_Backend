@@ -15,7 +15,7 @@ class Customer(models.Model):
 
 class Order(models.Model):
     orderId = models.AutoField(primary_key=True, null=False)
-    customerId = models.ForeignKey(Customer, null=False, on_delete=CASCADE)
+    customerId = models.ForeignKey(Customer, null=True, on_delete=CASCADE, related_name='orders')
     date = models.DateField(null=False)
     rate = models.IntegerField(null=True)
     advanceAmount = models.IntegerField(null=True)
