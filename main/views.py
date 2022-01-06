@@ -71,7 +71,7 @@ def placeOrder(request):
 
 #Get all bills
 @api_view(['GET'])
-def bills(request):
+def billsList(request):
     bills = Bill.objects.all()
     serializer = BillSerilizer(bills, many=True)
 
