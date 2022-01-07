@@ -5,7 +5,7 @@ urlpatterns = [
     path('', views.index, name='index'),
 
     path('customers/', views.customerList, name='customers-list'),
-    path('place-customer-order/', views.placeCustomerOrder, name='customer-order'),
+    path('place-customer-order-bill/', views.placeCustomerOrderOrBill, name='customer-order-bill'),
     
     path('orders/',views.orderList, name='orders-list'),
     path('order/<int:pk>', views.order, name='order'),

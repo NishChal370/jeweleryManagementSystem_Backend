@@ -5,8 +5,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.utils import serializer_helpers
-#There is Q objects that allow to complex lookups. Example:
-from django.db.models import Q
+
 
 from main.models import Customer, Order, Bill
 from main.serializers import BillSerilizer, CustomerSerilizer, OrderSerilizer
@@ -15,7 +14,7 @@ from main.serializers import BillSerilizer, CustomerSerilizer, OrderSerilizer
 def index(response):
     return HttpResponse("Hello from API")
 
-#get customer with their orders
+## Get customer with their orders
 @api_view(['GET'])
 def customerList(request):
     customer = Customer.objects.all()
@@ -25,8 +24,8 @@ def customerList(request):
 
 
 @api_view(['POST'])
-#register customer with order (place order)
-def placeCustomerOrder(request):
+## Register customer with order or bill (place order or bill also can update)
+def placeCustomerOrderOrBill(request):
      
     if(Customer.objects.filter(name= request.data['name']).exists()):
         oldCustomer = Customer.objects.get(name= request.data['name'])
@@ -42,7 +41,7 @@ def placeCustomerOrder(request):
         return Response(newCustomerOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Get all order
+## Get all order
 @api_view(['GET'])
 def orderList(request):
     orders = Order.objects.all()
@@ -63,7 +62,7 @@ def order(request, pk):
         return Response({"data" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Post orders
+## Post orders
 @api_view(['POST'])
 def placeOrder(request):
     newOrder = OrderSerilizer(data= request.data)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.base import Model
 from django.db.models.deletion import CASCADE
 from django.utils.timezone import now
 
@@ -18,8 +19,8 @@ class Order(models.Model):
     orderId = models.AutoField(primary_key=True, null=False)
     customerId = models.ForeignKey(Customer, null=True, on_delete=CASCADE, related_name='orders')
     date = models.DateField(null=False, default=now)
-    rate = models.IntegerField(null=True, blank = True)
-    advanceAmount = models.IntegerField(null=True, blank = True)
+    rate = models.FloatField(null=True, blank = True)
+    advanceAmount = models.FloatField(null=True, blank = True)
     submittionDate = models.DateField(null=False, blank = True)
     submittedDate = models.DateField(null=True, blank = True)
     design = models.ImageField( null=True, blank=True)
@@ -40,18 +41,19 @@ class Bill(models.Model):
     orderId = models.ForeignKey(Order, null=True, on_delete=CASCADE, related_name='orders')
     customerId = models.ForeignKey(Customer, null=True, on_delete=CASCADE, related_name='bills')
     date = models.DateField(null=False, default=now)
-    rate = models.IntegerField(null=True, blank=True)
-    customerProductWeight = models.IntegerField(null=True, blank=True)
-    customerProductAmount = models.IntegerField(null=True, blank=True)
-    totalAmount = models.IntegerField(null=True)
-    discount = models.IntegerField(null=True, blank=True)
-    grandTotalAmount = models.IntegerField(null=True)
-    advanceAmount = models.IntegerField(null=True, blank=True)
-    payedAmount = models.IntegerField(null=True, blank=True)
-    remainingAmount = models.IntegerField(null=True, blank=True)
+    rate = models.FloatField(null=True, blank=True)
+    customerProductWeight = models.FloatField(null=True, blank=True)
+    customerProductAmount = models.FloatField(null=True, blank=True)
+    totalAmount = models.FloatField(null=True)
+    discount = models.FloatField(null=True, blank=True)
+    grandTotalAmount = models.FloatField(null=True)
+    advanceAmount = models.FloatField(null=True, blank=True)
+    payedAmount = models.FloatField(null=True, blank=True)
+    remainingAmount = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=11, null=False, choices=bill_status, default='Submitted')
 
     def __str__(self):
         return f'{self.billId}'
+
 
 
