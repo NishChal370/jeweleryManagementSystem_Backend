@@ -5,6 +5,8 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.utils import serializer_helpers
+#There is Q objects that allow to complex lookups. Example:
+from django.db.models import Q
 
 from main.models import Customer, Order, Bill
 from main.serializers import BillSerilizer, CustomerSerilizer, OrderSerilizer
@@ -25,10 +27,15 @@ def customerList(request):
 @api_view(['POST'])
 #register customer with order (place order)
 def placeCustomerOrder(request):
-    newCustomerOrder = CustomerSerilizer(data= request.data)
-
+     
+    if(Customer.objects.filter(name= request.data['name']).exists()):
+        oldCustomer = Customer.objects.get(name= request.data['name'])
+        newCustomerOrder = CustomerSerilizer(instance= oldCustomer, data= request.data)
+    else:
+        newCustomerOrder = CustomerSerilizer(data= request.data)
+        
     if newCustomerOrder.is_valid():
-        newCustomerOrder.save()
+        newCustomerOrder.save()  
 
         return Response(newCustomerOrder.data)
     else:
