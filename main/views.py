@@ -8,7 +8,7 @@ from rest_framework.utils import serializer_helpers
 
 
 from main.models import Customer, Order, Bill, Product
-from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer
+from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer
 
 ##Create your views here.
 def index(response):
@@ -143,3 +143,15 @@ def getOrders(request):
     serializer = PlaceOrderSerilizer(customers, many=True)
 
     return Response(serializer.data)
+
+
+## GenerateOrderBill
+@api_view(['POST'])
+def generateOrderBill(request):
+    orderBill =  OrderBillSerilizer(data= request.data)
+    if orderBill.is_valid():
+        orderBill.save()
+
+        return Response(orderBill.data)
+    else:
+        return Response(orderBill.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -20,5 +20,6 @@ urlpatterns = [
 
     path('bills-list/',views.getBills, name='bills-list'),
     path('orders-list/',views.getOrders, name='orders-list'),
+    path('generate-order-bill/', views.generateOrderBill, name='enerate-order-bill'),
 ]
 

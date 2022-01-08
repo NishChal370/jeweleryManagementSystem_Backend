@@ -178,6 +178,38 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
 
 
 '''
+Create bill for order
+'''
+class OrderBillSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model= Bill
+        fields= '__all__'
+    
+    def validate(self, value):
+        if 'orderId' not in value:
+            
+            raise serializers.ValidationError({'message':'orderId is missing'})
+        elif value['orderId'].status == 'S':
+
+            raise serializers.ValidationError({'message':'Requested order bill is already created'})
+        
+        return value
+
+    def create(self, validated_data):
+        order= validated_data['orderId']
+        #get customerId from order and set to bills customerId
+        validated_data['customerId'] = order.customerId
+        Bill.objects.create(**validated_data) 
+
+        #update order status to submit
+        order.status = 'S'
+        order.save()
+        OrderSerilizer(order)
+
+        return validated_data
+
+
+'''
  #Register customer with order or bill 
  #if customer exist add bill or order in existing customer
 '''
