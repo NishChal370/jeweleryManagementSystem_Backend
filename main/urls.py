@@ -7,7 +7,7 @@ urlpatterns = [
     path('customers/', views.customerList, name='customers-list'),
     path('place-customer-order-bill/', views.placeCustomerOrderOrBill, name='customer-order-bill'),
     
-    path('orders/',views.orderList, name='orders-list'),
+    path('orders/',views.orderList, name='orders'),
     path('order/<int:pk>', views.order, name='order'),
     path('order-place/', views.placeOrder, name='place-order'),
 
@@ -17,5 +17,8 @@ urlpatterns = [
 
     path('generate-bill/', views.generateBill, name='generate-bill'),
     path('place-order/', views.generateOrder, name='place-order'),
+
+    path('bills-list/',views.getBills, name='bills-list'),
+    path('orders-list/',views.getOrders, name='orders-list'),
 ]
 

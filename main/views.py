@@ -41,7 +41,7 @@ def placeCustomerOrderOrBill(request):
         return Response(newCustomerOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-##Get all order
+##Get all order only
 @api_view(['GET'])
 def orderList(request):
     orders = Order.objects.all()
@@ -109,6 +109,13 @@ def generateBill(request):
     else:
         return Response(newBill.errors, status=status.HTTP_400_BAD_REQUEST)
 
+##Get customer bill
+@api_view(['GET'])
+def getBills(request):
+    customers = Customer.objects.all()
+    serializer = GenerateBillSerilizer(customers, many=True)
+
+    return Response(serializer.data)
 
 ##Generate Order
 @api_view(['POST'])
@@ -126,3 +133,13 @@ def generateOrder(request):
         return Response(newOrder.data)
     else:
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+##Getcustomer Order
+@api_view(['GET'])
+def getOrders(request):
+    customers = Customer.objects.all()
+    serializer = PlaceOrderSerilizer(customers, many=True)
+
+    return Response(serializer.data)
