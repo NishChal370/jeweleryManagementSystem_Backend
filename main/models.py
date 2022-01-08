@@ -89,8 +89,8 @@ class OrderProduct(models.Model):
         ('S','Submitted'),
     ]
     orderProductId = models.AutoField(primary_key=True, null=False)
-    orderId = models.ForeignKey(Order, null=False, on_delete=CASCADE, related_name='order')
-    productId = models.ForeignKey(Product, null=False, on_delete=CASCADE, related_name='orderProducts')
+    orderId = models.ForeignKey(Order, null=True, on_delete=CASCADE, related_name='orderProducts')
+    productId = models.ForeignKey(Product, null=True, on_delete=CASCADE, related_name='orderProduct')
     totalWeight = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=11, null=False, choices=order_status, default='Pending')
 

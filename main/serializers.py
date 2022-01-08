@@ -3,13 +3,14 @@ from django.db import models
 from django.db.models import fields
 from rest_framework import serializers
 
-from .models import Bill, BillProduct, Customer, Order, Product
+from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product
 
 ##Product
 class ProductSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+
 
 ##BillProduct
 class BillProductSerilizer(serializers.ModelSerializer):
@@ -19,11 +20,22 @@ class BillProductSerilizer(serializers.ModelSerializer):
         #fields = ('billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','products')
         fields = '__all__'
 
+
+##OrderProduct
+class OrderProductSerilizer(serializers.ModelSerializer):
+    orderProduct = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    class Meta:
+        model = OrderProduct
+        fields = '__all__'
+
+
 ##Order
 class OrderSerilizer(serializers.ModelSerializer):
+    orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model = Order
-        fields = '__all__' 
+        fields = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark', 'orderProducts')
+
 
 ##Bill
 class BillSerilizer(serializers.ModelSerializer):
@@ -34,7 +46,7 @@ class BillSerilizer(serializers.ModelSerializer):
 
 
 """
- # it register customer and add their generate their bill.
+ # it register customer and add / generate their bill.
  # if customer already register  generate bill for existing customer
 """
 class GenerateBillSerilizer(serializers.ModelSerializer):
@@ -95,6 +107,72 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
                 newProduct = Product.objects.create(**product)
                 # add billProduct for existing customer
                 BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
+
+        return instance
+
+
+"""
+ # it register customer and add / generate their Order.
+ # if customer already register  generate Order for existing customer
+"""
+class PlaceOrderSerilizer(serializers.ModelSerializer):
+    orders = OrderSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    class Meta:
+        model = Customer
+        fields = ('customerId', 'name', 'address', 'phone', 'email', 'orders')
+
+    def validate(self, value):
+        if 'orders' not in value :
+            raise serializers.ValidationError({'message':'Order is missing.'})
+        elif len(value['orders']) < 1:
+            raise serializers.ValidationError({'message':'Order is missing.'})
+
+        for order in value['orders']:
+            if 'orderProducts' not in order:
+                raise serializers.ValidationError({'message':'OrderProduct is missing.'})
+            elif len(order['orderProducts']) < 1:
+                raise serializers.ValidationError({'messsage':'OrderProduct is missing.'}) 
+
+            for orderProducts in order['orderProducts']:
+                if 'orderProduct' not in orderProducts:
+                    raise serializers.ValidationError({'message':'Product is missing.'})
+
+        return value
+
+
+    def create(self, validated_data):
+        orders = validated_data.pop('orders')
+        #create customer
+        customer = Customer.objects.create(**validated_data) 
+
+        for order in orders :
+            orderProducts = order.pop('orderProducts')
+            #create order
+            newOrder = Order.objects.create(customerId=customer, **order)
+
+            for orderProduct in orderProducts:
+                product = orderProduct.pop('orderProduct')
+                #create product
+                newProduct = Product.objects.create(**product)
+                #create orderProduct
+                OrderProduct.objects.create(orderId=newOrder, productId=newProduct, **orderProduct)
+                
+        return customer
+    
+    def update(self, instance, validated_data):
+        orders = validated_data.pop('orders')
+
+        for order in orders :
+            orderProducts = order.pop('orderProducts')
+            #add Order in for existing customer
+            newOrder = Order.objects.create(customerId=instance, **order)
+
+            for orderProduct in orderProducts:
+                product = orderProduct.pop('orderProduct')
+                # add product for existing customer
+                newProduct = Product.objects.create(**product)
+                # add orderProduct for existing customer
+                OrderProduct.objects.create(orderId=newOrder, productId=newProduct, **orderProduct)
 
         return instance
 

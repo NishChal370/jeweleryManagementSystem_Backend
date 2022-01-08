@@ -15,6 +15,7 @@ urlpatterns = [
 
     path('products/', views.productList, name='product-list'), 
 
-    path('generate-bill/', views.generateBill, name='generate-bill')
+    path('generate-bill/', views.generateBill, name='generate-bill'),
+    path('place-order/', views.generateOrder, name='place-order'),
 ]
 
