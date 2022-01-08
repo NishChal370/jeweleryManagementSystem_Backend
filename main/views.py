@@ -7,14 +7,14 @@ from rest_framework.decorators import api_view
 from rest_framework.utils import serializer_helpers
 
 
-from main.models import Customer, Order, Bill
-from main.serializers import BillSerilizer, CustomerSerilizer, OrderSerilizer
+from main.models import Customer, Order, Bill, Product
+from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderSerilizer, ProductSerilizer
 
-# Create your views here.
+##Create your views here.
 def index(response):
     return HttpResponse("Hello from API")
 
-## Get customer with their orders
+##Get customer with their orders and bills
 @api_view(['GET'])
 def customerList(request):
     customer = Customer.objects.all()
@@ -23,8 +23,8 @@ def customerList(request):
     return Response(serializer.data)
 
 
+##Register customer with order or bill (or if customer exist add bill or order in existing customer)
 @api_view(['POST'])
-## Register customer with order or bill (place order or bill also can update)
 def placeCustomerOrderOrBill(request):
      
     if(Customer.objects.filter(name= request.data['name']).exists()):
@@ -41,7 +41,7 @@ def placeCustomerOrderOrBill(request):
         return Response(newCustomerOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-## Get all order
+##Get all order
 @api_view(['GET'])
 def orderList(request):
     orders = Order.objects.all()
@@ -50,7 +50,7 @@ def orderList(request):
     return Response(serializer.data)
 
 
-## Get order by ID
+##Get order by ID
 @api_view(['GET'])
 def order(request, pk):
     try:
@@ -59,10 +59,10 @@ def order(request, pk):
 
         return Response(serializer.data)
     except:
-        return Response({"data" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
-## Post orders
+##Post orders
 @api_view(['POST'])
 def placeOrder(request):
     newOrder = OrderSerilizer(data= request.data)
@@ -75,10 +75,36 @@ def placeOrder(request):
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-#Get all bills
+##Get all bills
 @api_view(['GET'])
 def billsList(request):
     bills = Bill.objects.all()
     serializer = BillSerilizer(bills, many=True)
 
     return Response(serializer.data)
+
+##Get all products
+@api_view(['GET'])
+def productList(request):
+    products = Product.objects.all()
+    serializer = ProductSerilizer(products, many=True)
+
+    return Response(serializer.data)
+
+##Generate Bill
+@api_view(['POST'])
+def generateBill(request):
+
+    if(Customer.objects.filter(name= request.data['name']).exists()):
+        oldCustomer = Customer.objects.get(name= request.data['name'])
+        newBill = GenerateBillSerilizer(instance= oldCustomer, data= request.data)
+    else:
+        newBill = GenerateBillSerilizer(data= request.data)
+    #newBill = GenerateBillSerilizer(data=request.data)
+
+    if newBill.is_valid():
+        newBill.save()
+
+        return Response(newBill.data)
+    else:
+        return Response(newBill.errors, status=status.HTTP_400_BAD_REQUEST)

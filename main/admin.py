@@ -6,11 +6,11 @@ from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product
 class CustomerDisplay(admin.ModelAdmin):
     list_display = ('customerId', 'name', 'address', 'phone', 'email')
 
-class OrderDisplay(admin.ModelAdmin):
-    list_display = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark')
-
 class BillDisplay(admin.ModelAdmin):
     list_display = ('billId', 'customerId', 'orderId', 'date', 'rate', 'customerProductWeight', 'customerProductAmount', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
+
+class OrderDisplay(admin.ModelAdmin):
+    list_display = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark')
 
 class ProductDisplay(admin.ModelAdmin):
     list_display = ('productId', 'productName', 'netWeight', 'size', 'gemsName', 'gemsPrice')

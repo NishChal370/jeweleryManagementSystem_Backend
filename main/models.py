@@ -71,8 +71,8 @@ class Product(models.Model):
 
 class BillProduct(models.Model):
     billProductId = models.AutoField(primary_key=True, null=False)
-    billId = models.ForeignKey(Bill, null=False, on_delete=CASCADE, related_name='bill')
-    productId = models.ForeignKey(Product, null=False, on_delete=CASCADE, related_name='product')
+    billId = models.ForeignKey(Bill, null=True, on_delete=CASCADE, related_name='billProduct')
+    productId = models.ForeignKey(Product, null=True, blank=True, on_delete=CASCADE, related_name='product')
     lossWeight = models.FloatField(null=True, blank=True)
     totalWeight = models.FloatField(null=True, blank=True)
     rate = models.FloatField(null=True, blank=True)
