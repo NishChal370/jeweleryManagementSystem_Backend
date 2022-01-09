@@ -21,5 +21,10 @@ urlpatterns = [
     path('bills-list/',views.getBills, name='bills-list'),
     path('orders-list/',views.getOrders, name='orders-list'),
     path('generate-order-bill/', views.generateOrderBill, name='enerate-order-bill'),
+
+    path('rates/', views.getAllRates, name='rates-list'),
+    path('rate-set/', views.setRate, name='rate-set'),
+    path('rate/<str:date>', views.getRateByDate, name='rate-by-date'),
+    path('rate-update/<int:pk>', views.updateTodaysRate, name='rate-update'),
 ]
 

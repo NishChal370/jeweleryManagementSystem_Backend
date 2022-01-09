@@ -1,14 +1,19 @@
 
+from math import e
 from django.http.response import HttpResponse
 
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+#from datetime import datetime
+#from django.utils.timezone import datetime
+from django.utils.timezone import now
+import datetime
 from rest_framework.utils import serializer_helpers
 
 
-from main.models import Customer, Order, Bill, Product
-from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer
+from main.models import Customer, Order, Bill, Product, Rate
+from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
 
 ##Create your views here.
 def index(response):
@@ -155,3 +160,84 @@ def generateOrderBill(request):
         return Response(orderBill.data)
     else:
         return Response(orderBill.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+## get all rates
+@api_view(['GET'])
+def getAllRates(request):
+    rates = Rate.objects.all()
+    serializer = RateSerilizer(rates, many=True)
+
+    return Response(serializer.data)
+
+
+
+## set rate
+@api_view(['POST'])
+def setRate(request):
+    existingRate = Rate.objects.filter(date= datetime.datetime.now())
+    if(existingRate.exists()):
+
+        print("--------------------------------------------HAVE---------------------------------")
+        print(Rate.objects.get(date= datetime.datetime.now()))
+    #newRate = RateSerilizer(data= request.data)
+    #Rate.objects.filter(date= datetime.datetime.now()).exists()
+        oldRate = Rate.objects.get(date= datetime.datetime.now())
+    
+    #print("-----------------------------> ", oldRate)
+        newRate = RateSerilizer(instance= oldRate, data= request.data)
+    else:
+        newRate = RateSerilizer(data= request.data)
+    '''existingRate = Rate.objects.filter(date= "2022-01-09T06:43:23.399926Z")
+    if(existingRate['date'].now() == datetime.datetime.now()):
+        oldRate = Rate.objects.get(date= datetime.datetime.now())
+        newRate = RateSerilizer(instance= oldRate, data= request.data)
+    else:
+        newRate = RateSerilizer(data= request.data)'''
+
+
+    if newRate.is_valid():
+        newRate.save()
+
+        return Response(newRate.data)
+    else:
+
+        return Response(newRate.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+## Get rate by date
+@api_view(['GET'])
+def getRateByDate(request, date):
+    try:
+        rate = Rate.objects.get(date = date)
+        serializer = RateSerilizer(rate, many=False)
+        return Response(serializer.data)
+    except :
+
+       return Response({"message": "Invalid Request"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+## update todays rate
+@api_view(['POST'])
+def updateTodaysRate(request, pk):
+    try:
+        rate = Rate.objects.get(rateId = pk)
+        # allow to update todays date only
+        if(rate.date.date() == datetime.datetime.now().date()) : 
+            updatedRate = RateSerilizer(instance=rate, data=request.data)
+
+            if updatedRate.is_valid():
+                updatedRate.save()
+
+                return Response(updatedRate.data)
+            else:
+
+                return Response(updatedRate.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+
+            return Response({"messagee": "Data cannot be updated!!!"}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"message": "ID "+str(pk)+" Not Found!!"}, status=status.HTTP_400_BAD_REQUEST)

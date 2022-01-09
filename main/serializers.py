@@ -2,8 +2,8 @@
 from django.db import models
 from django.db.models import fields
 from rest_framework import serializers
-
-from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product
+from django.utils.timezone import now
+from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate
 
 ##Product
 class ProductSerilizer(serializers.ModelSerializer):
@@ -48,6 +48,16 @@ class BillSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'customerProductWeight', 'customerProductAmount', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+
+
+
+##Rate
+class RateSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Rate
+        fields = '__all__'
+        # ('rateId', 'date', 'hallmarkRate', 'tajabiRate', 'silverRate')
+
 
 
 """
@@ -272,3 +282,4 @@ class CustomerSerilizer(serializers.ModelSerializer):
                 Order.objects.create(customerId=instance, **order)
 
         return instance
+

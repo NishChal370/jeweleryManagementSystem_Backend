@@ -1,10 +1,17 @@
 from django.contrib import admin
 from django.contrib.admin.sites import site
 
-from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product
+from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate
 
 class CustomerDisplay(admin.ModelAdmin):
     list_display = ('customerId', 'name', 'address', 'phone', 'email')
+
+
+
+class RateDisplay(admin.ModelAdmin):
+    list_display = ('rateId', 'date', 'hallmarkRate', 'tajabiRate', 'silverRate')
+
+
 
 class BillDisplay(admin.ModelAdmin):
     list_display = ('billId', 'customerId', 'orderId', 'date', 'rate', 'customerProductWeight', 'customerProductAmount', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
@@ -21,8 +28,11 @@ class BillProductDisplay(admin.ModelAdmin):
 class OrderProductDisplay(admin.ModelAdmin):
     list_display = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status')
 
+
+
 # Register your models here.
 admin.site.register(Customer, CustomerDisplay)
+admin.site.register(Rate, RateDisplay)
 admin.site.register(Bill, BillDisplay)
 admin.site.register(Order, OrderDisplay)
 admin.site.register(Product, ProductDisplay)
