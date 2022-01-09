@@ -9,16 +9,21 @@ from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product
 class ProductSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ('productId', 'productName', 'netWeight', 'size', 'gemsName', 'gemsPrice')
 
 
 ##BillProduct
 class BillProductSerilizer(serializers.ModelSerializer):
-    product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    #product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = BillProduct
-        #fields = ('billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','products')
-        fields = '__all__'
+        #fields = ('billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
+        fields = ('billProductId', 'billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct', 'productId')
+    
+    def to_representation(self, instance): # it shows all the product insted of id
+        rep = super().to_representation(instance)
+        rep['product'] = ProductSerilizer(instance.productId).data
+        return rep
 
 
 ##OrderProduct
@@ -26,7 +31,7 @@ class OrderProductSerilizer(serializers.ModelSerializer):
     orderProduct = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = OrderProduct
-        fields = '__all__'
+        fields = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status', 'orderProduct')
 
 
 ##Order
@@ -181,17 +186,18 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
 Create bill for order
 '''
 class OrderBillSerilizer(serializers.ModelSerializer):
+    billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model= Bill
-        fields= '__all__'
+        fields= ('billId', 'orderId', 'customerId', 'date', 'rate', 'customerProductWeight', 'customerProductAmount', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
     
     def validate(self, value):
         if 'orderId' not in value:
             
             raise serializers.ValidationError({'message':'orderId is missing'})
-        elif value['orderId'].status == 'S':
+        #elif value['orderId'].status == 'S': // UNCOMMMENT LATER 
 
-            raise serializers.ValidationError({'message':'Requested order bill is already created'})
+            #raise serializers.ValidationError({'message':'Requested order bill is already created'}) // UNCOMMMENT LATER 
         
         return value
 
@@ -199,14 +205,16 @@ class OrderBillSerilizer(serializers.ModelSerializer):
         order= validated_data['orderId']
         #get customerId from order and set to bills customerId
         validated_data['customerId'] = order.customerId
-        Bill.objects.create(**validated_data) 
+        orderProduct = OrderProduct.objects.get(orderId = order.orderId)
 
-        #update order status to submit
+        bill = Bill.objects.create(**validated_data) 
+        BillProduct.objects.create(billId=bill, productId=orderProduct.productId)
+
         order.status = 'S'
         order.save()
         OrderSerilizer(order)
 
-        return validated_data
+        return bill
 
 
 '''
