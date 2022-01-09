@@ -5,12 +5,9 @@ from django.http.response import HttpResponse
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-#from datetime import datetime
-#from django.utils.timezone import datetime
-from django.utils.timezone import now
-import datetime
-from rest_framework.utils import serializer_helpers
 
+import datetime
+from django.utils.timezone import now
 
 from main.models import Customer, Order, Bill, Product, Rate
 from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
@@ -19,6 +16,8 @@ from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSeril
 def index(response):
     return HttpResponse("Hello from API")
 
+
+
 ##Get customer with their orders and bills
 @api_view(['GET'])
 def customerList(request):
@@ -26,6 +25,7 @@ def customerList(request):
     serializer = CustomerSerilizer(customer, many = True)
 
     return Response(serializer.data)
+
 
 
 ##Register customer with order or bill (or if customer exist add bill or order in existing customer)
@@ -46,6 +46,7 @@ def placeCustomerOrderOrBill(request):
         return Response(newCustomerOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 ##Get all order only
 @api_view(['GET'])
 def orderList(request):
@@ -53,6 +54,7 @@ def orderList(request):
     serializer = OrderSerilizer(orders, many = True)
 
     return Response(serializer.data)
+
 
 
 ##Get order by ID
@@ -65,6 +67,7 @@ def order(request, pk):
         return Response(serializer.data)
     except:
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 ##Post orders
@@ -80,6 +83,7 @@ def placeOrder(request):
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 ##Get all bills
 @api_view(['GET'])
 def billsList(request):
@@ -88,6 +92,8 @@ def billsList(request):
 
     return Response(serializer.data)
 
+
+
 ##Get all products
 @api_view(['GET'])
 def productList(request):
@@ -95,6 +101,8 @@ def productList(request):
     serializer = ProductSerilizer(products, many=True)
 
     return Response(serializer.data)
+
+
 
 ##Generate Bill
 @api_view(['POST'])
@@ -114,6 +122,8 @@ def generateBill(request):
     else:
         return Response(newBill.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
 ##Get customer bill
 @api_view(['GET'])
 def getBills(request):
@@ -121,6 +131,8 @@ def getBills(request):
     serializer = GenerateBillSerilizer(customers, many=True)
 
     return Response(serializer.data)
+
+
 
 ##Generate Order
 @api_view(['POST'])
@@ -137,6 +149,7 @@ def generateOrder(request):
 
         return Response(newOrder.data)
     else:
+        
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -159,6 +172,7 @@ def generateOrderBill(request):
 
         return Response(orderBill.data)
     else:
+
         return Response(orderBill.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -178,24 +192,10 @@ def getAllRates(request):
 def setRate(request):
     existingRate = Rate.objects.filter(date= datetime.datetime.now())
     if(existingRate.exists()):
-
-        print("--------------------------------------------HAVE---------------------------------")
-        print(Rate.objects.get(date= datetime.datetime.now()))
-    #newRate = RateSerilizer(data= request.data)
-    #Rate.objects.filter(date= datetime.datetime.now()).exists()
         oldRate = Rate.objects.get(date= datetime.datetime.now())
-    
-    #print("-----------------------------> ", oldRate)
         newRate = RateSerilizer(instance= oldRate, data= request.data)
     else:
         newRate = RateSerilizer(data= request.data)
-    '''existingRate = Rate.objects.filter(date= "2022-01-09T06:43:23.399926Z")
-    if(existingRate['date'].now() == datetime.datetime.now()):
-        oldRate = Rate.objects.get(date= datetime.datetime.now())
-        newRate = RateSerilizer(instance= oldRate, data= request.data)
-    else:
-        newRate = RateSerilizer(data= request.data)'''
-
 
     if newRate.is_valid():
         newRate.save()
@@ -213,6 +213,7 @@ def getRateByDate(request, date):
     try:
         rate = Rate.objects.get(date = date)
         serializer = RateSerilizer(rate, many=False)
+
         return Response(serializer.data)
     except :
 
@@ -240,4 +241,5 @@ def updateTodaysRate(request, pk):
 
             return Response({"messagee": "Data cannot be updated!!!"}, status=status.HTTP_400_BAD_REQUEST)
     except:
+
         return Response({"message": "ID "+str(pk)+" Not Found!!"}, status=status.HTTP_400_BAD_REQUEST)
