@@ -1,24 +1,33 @@
 
 from django.db import models
 from django.db.models import fields
+
 from rest_framework import serializers
+
 from django.utils.timezone import now
+
 from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate
 
-##Product
+
+
+'''
+ # Product
+'''
 class ProductSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('productId', 'productName', 'netWeight', 'size', 'gemsName', 'gemsPrice')
 
 
-##BillProduct
+
+'''
+ # BillProduct
+'''
 class BillProductSerilizer(serializers.ModelSerializer):
-    #product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = BillProduct
-        #fields = ('billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
-        fields = ('billProductId', 'billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct', 'productId')
+        fields = ('billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
     
     def to_representation(self, instance): # it shows all the product insted of id
         rep = super().to_representation(instance)
@@ -26,7 +35,10 @@ class BillProductSerilizer(serializers.ModelSerializer):
         return rep
 
 
-##OrderProduct
+
+'''
+ # OrderProduct
+'''
 class OrderProductSerilizer(serializers.ModelSerializer):
     orderProduct = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
@@ -34,7 +46,10 @@ class OrderProductSerilizer(serializers.ModelSerializer):
         fields = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status', 'orderProduct')
 
 
-##Order
+
+'''
+ # Order
+'''
 class OrderSerilizer(serializers.ModelSerializer):
     orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
@@ -42,7 +57,10 @@ class OrderSerilizer(serializers.ModelSerializer):
         fields = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark', 'orderProducts')
 
 
-##Bill
+
+'''
+ # Bill
+'''
 class BillSerilizer(serializers.ModelSerializer):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
@@ -51,12 +69,13 @@ class BillSerilizer(serializers.ModelSerializer):
 
 
 
-##Rate
+'''
+ # Rate
+'''
 class RateSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Rate
-        fields = '__all__'
-        # ('rateId', 'date', 'hallmarkRate', 'tajabiRate', 'silverRate')
+        fields = ('rateId', 'date', 'hallmarkRate', 'tajabiRate', 'silverRate')
 
 
 
@@ -71,6 +90,7 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
         fields = ('customerId', 'name', 'address', 'phone', 'email', 'bills')
 
     def validate(self, value):
+        print(value)
         if 'bills' not in value :
             raise serializers.ValidationError({'message':'Bill is missing.'})
         elif len(value['bills']) < 1:
@@ -83,6 +103,7 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'messsage':'BillProduct is missing.'}) 
 
             for billProduct in bill['billProduct']:
+                
                 if 'product' not in billProduct:
                     raise serializers.ValidationError({'message':'Product is missing.'})
 
@@ -192,6 +213,7 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
         return instance
 
 
+
 '''
 Create bill for order
 '''
@@ -225,6 +247,7 @@ class OrderBillSerilizer(serializers.ModelSerializer):
         OrderSerilizer(order)
 
         return bill
+
 
 
 '''

@@ -2,8 +2,8 @@
 from math import e
 from django.http.response import HttpResponse
 
-from rest_framework import serializers, status
 from rest_framework.response import Response
+from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 
 import datetime
@@ -11,6 +11,8 @@ from django.utils.timezone import now
 
 from main.models import Customer, Order, Bill, Product, Rate
 from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
+
+
 
 ##Create your views here.
 def index(response):
@@ -113,7 +115,6 @@ def generateBill(request):
         newBill = GenerateBillSerilizer(instance= oldCustomer, data= request.data)
     else:
         newBill = GenerateBillSerilizer(data= request.data)
-    #newBill = GenerateBillSerilizer(data=request.data)
 
     if newBill.is_valid():
         newBill.save()
@@ -227,7 +228,7 @@ def updateTodaysRate(request, pk):
     try:
         rate = Rate.objects.get(rateId = pk)
         # allow to update todays date only
-        if(rate.date.date() == datetime.datetime.now().date()) : 
+        if(rate.date == datetime.date.today()) : 
             updatedRate = RateSerilizer(instance=rate, data=request.data)
 
             if updatedRate.is_valid():

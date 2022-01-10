@@ -1,8 +1,11 @@
 from django.db import models
 from django.db.models.base import Model
 from django.db.models.deletion import CASCADE
-from django.utils.timezone import now
+
 import datetime
+from django.utils.timezone import now
+
+
 
 # Create your models here.
 class Customer(models.Model):
@@ -103,7 +106,7 @@ class OrderProduct(models.Model):
 
 class Rate(models.Model):
     rateId = models.AutoField(primary_key=True, null=False)
-    date = models.DateField(null=True, blank=True, default=now().date)
+    date = models.DateField(null=True, blank=True, default=datetime.date.today())
     hallmarkRate = models.FloatField(null=False)
     tajabiRate = models.FloatField(null=False)
     silverRate = models.FloatField(null=False)
