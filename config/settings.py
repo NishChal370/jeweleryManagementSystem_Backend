@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'main.apps.MainConfig',
+    'corsheaders',
     'rest_framework',
 ]
 
@@ -55,6 +56,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -138,3 +142,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+
+CORS_ALLOWED_ORIGINS = [
+
+    "http://localhost:3000",
+
+]
