@@ -10,7 +10,7 @@ import datetime
 from django.utils.timezone import now
 
 from main.models import Customer, Order, Bill, Product, Rate
-from main.serializers import BillSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
+from main.serializers import BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
 
 
 
@@ -27,6 +27,19 @@ def customerList(request):
     serializer = CustomerSerilizer(customer, many = True)
 
     return Response(serializer.data)
+
+
+
+##Get customer by ID
+@api_view(['GET'])
+def customerById(request, pk):
+    try:
+        customer = Customer.objects.get(customerId=pk)
+        serializer = CustomerInfoSerilizer(customer, many=False)
+
+        return Response(serializer.data)
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -63,7 +76,7 @@ def orderList(request):
 @api_view(['GET'])
 def order(request, pk):
     try:
-        order = Order.objects.get(customerId=pk)
+        order = Order.objects.get(orderId=pk)
         serializer = OrderSerilizer(order, many=False)
 
         return Response(serializer.data)
@@ -93,6 +106,19 @@ def billsList(request):
     serializer = BillSerilizer(bills, many=True)
 
     return Response(serializer.data)
+
+
+
+##Get bill by ID
+@api_view(['GET'])
+def billById(request, pk):
+    try:
+        bill = Bill.objects.get(billId=pk)
+        serializer = BillSerilizer(bill, many=False)
+
+        return Response(serializer.data)
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
 

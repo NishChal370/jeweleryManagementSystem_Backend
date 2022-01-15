@@ -7,6 +7,8 @@ urlpatterns = [
     path('', views.index, name='index'),
 
     path('customers/', views.customerList, name='customers-list'),
+    path('customer/<int:pk>', views.customerById, name='customer-by-id'),
+    
     path('place-customer-order-bill/', views.placeCustomerOrderOrBill, name='customer-order-bill'),
     
     path('orders/',views.orderList, name='orders'),
@@ -14,6 +16,7 @@ urlpatterns = [
     path('order-place/', views.placeOrder, name='place-order'),
 
     path('bills/', views.billsList, name='bill-list'), 
+    path('bill/<int:pk>', views.billById, name='bill-by-id'),
 
     path('products/', views.productList, name='product-list'), 
 

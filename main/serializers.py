@@ -306,3 +306,12 @@ class CustomerSerilizer(serializers.ModelSerializer):
 
         return instance
 
+
+
+'''
+    # Get customer Detail only
+'''
+class CustomerInfoSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ('customerId', 'name', 'address', 'phone', 'email')
