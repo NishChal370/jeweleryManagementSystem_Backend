@@ -27,7 +27,7 @@ class BillProductSerilizer(serializers.ModelSerializer):
     product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = BillProduct
-        fields = ('billId', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
+        fields = ('billId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
     
     def to_representation(self, instance): # it shows all the product insted of id
         rep = super().to_representation(instance)
@@ -65,7 +65,7 @@ class BillSerilizer(serializers.ModelSerializer):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model = Bill
-        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'customerProductWeight', 'customerProductAmount', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
 
 
 

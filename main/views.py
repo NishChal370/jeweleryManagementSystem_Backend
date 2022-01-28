@@ -209,8 +209,10 @@ def generateOrderBill(request):
 def getAllRates(request):
     rates = Rate.objects.all()
     serializer = RateSerilizer(rates, many=True)
-
-    return Response(serializer.data)
+    if(len(serializer.data) <=0):
+        return Response("Rate data is empty", status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(serializer.data)
 
 
 

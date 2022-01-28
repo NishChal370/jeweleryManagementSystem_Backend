@@ -1,3 +1,4 @@
+from turtle import mode
 from django.db import models
 from django.db.models.base import Model
 from django.db.models.deletion import CASCADE
@@ -13,7 +14,7 @@ class Customer(models.Model):
     name = models.CharField(max_length=50, null=False)
     address = models.CharField(max_length=50, null=False)
     phone = models.CharField(max_length=10)
-    email = models.EmailField()
+    email = models.EmailField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.customerId}'
@@ -37,8 +38,13 @@ class Order(models.Model):
 
 class Bill(models.Model):
     bill_status = [
-        ('D','Draft'),
-        ('S','Submitted'),
+        ('draft','DRAFT'),
+        ('submitted','SUBMITTED'),
+    ]
+
+    bill_type =[
+        ('gold', 'GOLD'),
+        ('silver', 'SILVER')
     ]
 
     billId =  models.AutoField(primary_key=True, null=False)
@@ -46,15 +52,18 @@ class Bill(models.Model):
     customerId = models.ForeignKey(Customer, null=True, on_delete=CASCADE, related_name='bills')
     date = models.DateField(null=False, default=now)
     rate = models.FloatField(null=True, blank=True)
+    billType = models.CharField(max_length=11, null=False, choices=bill_type, default='gold')
     customerProductWeight = models.FloatField(null=True, blank=True)
     customerProductAmount = models.FloatField(null=True, blank=True)
+    finalWeight = models.FloatField(null=True, blank=True)
+    grandWeight = models.FloatField(null=True, blank=True)
     totalAmount = models.FloatField(null=True)
     discount = models.FloatField(null=True, blank=True)
     grandTotalAmount = models.FloatField(null=True)
     advanceAmount = models.FloatField(null=True, blank=True)
     payedAmount = models.FloatField(null=True, blank=True)
     remainingAmount = models.FloatField(null=True, blank=True)
-    status = models.CharField(max_length=11, null=False, choices=bill_status, default='Submitted')
+    status = models.CharField(max_length=11, null=False, choices=bill_status, default='submitted')
 
     def __str__(self):
         return f'{self.billId}'
@@ -79,6 +88,7 @@ class BillProduct(models.Model):
     productId = models.ForeignKey(Product, null=True, blank=True, on_delete=CASCADE, related_name='product')
     lossWeight = models.FloatField(null=True, blank=True)
     totalWeight = models.FloatField(null=True, blank=True)
+    quantity = models.FloatField(null=True, blank=True, default=1)
     rate = models.FloatField(null=True, blank=True)
     makingCharge = models.FloatField(null=True, blank=True)
     totalAmountPerProduct = models.FloatField(null=True, blank=True)
