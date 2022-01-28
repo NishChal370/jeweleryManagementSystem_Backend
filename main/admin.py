@@ -16,7 +16,7 @@ class RateDisplay(admin.ModelAdmin):
 
 
 class BillDisplay(admin.ModelAdmin):
-    list_display = ('billId', 'customerId', 'orderId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
+    list_display = ('billId', 'customerId', 'orderId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
 
 
 

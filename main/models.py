@@ -56,7 +56,7 @@ class Bill(models.Model):
     customerProductWeight = models.FloatField(null=True, blank=True)
     customerProductAmount = models.FloatField(null=True, blank=True)
     finalWeight = models.FloatField(null=True, blank=True)
-    grandWeight = models.FloatField(null=True, blank=True)
+    grandTotalWeight = models.FloatField(null=True, blank=True)
     totalAmount = models.FloatField(null=True)
     discount = models.FloatField(null=True, blank=True)
     grandTotalAmount = models.FloatField(null=True)
