@@ -13,7 +13,7 @@ class Customer(models.Model):
     customerId = models.AutoField(primary_key=True, null=False)
     name = models.CharField(max_length=50, null=False)
     address = models.CharField(max_length=50, null=False)
-    phone = models.CharField(max_length=10)
+    phone = models.CharField(max_length=10, null=True , blank=True)
     email = models.EmailField(null=True, blank=True)
 
     def __str__(self):

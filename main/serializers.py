@@ -1,4 +1,5 @@
 
+import re
 from django.db import models
 from django.db.models import fields
 
@@ -8,7 +9,10 @@ from django.utils.timezone import now
 
 from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate
 
+from rest_framework.pagination import PageNumberPagination
 
+from rest_framework.generics import ListAPIView
+from rest_framework.views import APIView
 
 '''
  # Product
@@ -66,6 +70,48 @@ class BillSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 7
+'''
+# search bill
+'''
+class BillSearchSerilizer(serializers.ModelSerializer, APIView):
+    billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
+    # pagination_class =StandardResultsSetPagination
+    class Meta:
+        model = Bill
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+
+    def to_representation(self, data):
+        searchData = {'billId': '', 'customerId':'', 'customerName':'',  'phone':'', 'type':'', 'totalProduct': '', 'productsWeight':'', 'customerProductWeight': '', 'status':  '', 'payment': '', 'date': ''}
+        
+        rep = super().to_representation(data)
+        customer = CustomerSerilizer(data.customerId).data
+
+        if(rep['remainingAmount']  == None):
+            rep['remainingAmount'] = 0
+
+        if(rep['remainingAmount'] > 0 ):
+            searchData['payment'] = "Remain"
+        else:
+           searchData['payment'] = "Payed"
+        
+        searchData['date'] = rep['date']
+        searchData['billId'] = rep['billId']
+        searchData['type'] = rep['billType']
+        searchData['status'] = rep['status']
+        searchData['phone'] = customer['phone']
+        searchData['customerId'] = customer['customerId']
+        searchData['customerName'] = customer['name']
+        searchData['productsWeight'] = rep['finalWeight']
+        searchData['totalProduct'] = len(rep['billProduct'])
+        searchData['customerProductWeight'] = rep['customerProductWeight']
+
+        return searchData
 
 
 

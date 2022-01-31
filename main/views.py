@@ -10,7 +10,7 @@ import datetime
 from django.utils.timezone import now
 
 from main.models import Customer, Order, Bill, Product, Rate
-from main.serializers import BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
+from main.serializers import BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
 
 
 
@@ -107,6 +107,12 @@ def billsList(request):
 
     return Response(serializer.data)
 
+@api_view(['GET'])
+def billsListSummmary(request):
+    bills = Bill.objects.all()
+    serializer = BillSearchSerilizer(bills, many=True)
+
+    return Response(serializer.data)
 
 
 ##Get bill by ID
