@@ -12,7 +12,7 @@ from django.utils.timezone import now
 from main.models import Customer, Order, Bill, Product, Rate
 from main.serializers import BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
 
-
+from rest_framework.pagination import PageNumberPagination
 
 ##Create your views here.
 def index(response):
@@ -101,18 +101,61 @@ def placeOrder(request):
 
 ##Get all bills
 @api_view(['GET'])
-def billsList(request):
+def billsList(request): 
     bills = Bill.objects.all()
     serializer = BillSerilizer(bills, many=True)
 
     return Response(serializer.data)
 
+
+'''
+#######class base pagination
+from rest_framework.pagination import PageNumberPagination
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 1
+    page_size_query_param = 'page_size'
+    max_page_size = 2
+
+from rest_framework import generics
+class billsList(generics.ListAPIView):
+    queryset = Bill.objects.all()
+    serializer_class = BillSerilizer
+    pagination_class = StandardResultsSetPagination'''
+
+'''
+####function base pagination
+from rest_framework.pagination import PageNumberPagination
+
+#Get all bills
+@api_view(['GET'])
+def billsList(request): 
+    paginator = PageNumberPagination()
+    paginator.page_size = 1
+    bills = Bill.objects.all()
+    result_page = paginator.paginate_queryset(bills, request)
+    serializer = BillSerilizer(result_page, many=True)
+
+    return paginator.get_paginated_response(serializer.data)
+'''
+
+
+##Get bill summary / bill search in frontend
 @api_view(['GET'])
 def billsListSummmary(request):
-    bills = Bill.objects.all()
-    serializer = BillSearchSerilizer(bills, many=True)
 
-    return Response(serializer.data)
+    paginator = PageNumberPagination()
+    paginator.page_size = 21
+    bills = Bill.objects.all().order_by('-date', '-billId')
+
+    result_page = paginator.paginate_queryset(bills, request)
+
+    serializer = BillSearchSerilizer(result_page, many=True)
+
+    data = paginator.get_paginated_response(serializer.data)
+    data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
+
+    return data
+
 
 
 ##Get bill by ID
