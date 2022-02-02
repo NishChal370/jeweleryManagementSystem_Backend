@@ -13,7 +13,8 @@ from main.models import Customer, Order, Bill, Product, Rate
 from main.serializers import BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
 
 from rest_framework.pagination import PageNumberPagination
-
+#Q objects that allow to complex lookups.
+from django.db.models import Q
 ##Create your views here.
 def index(response):
     return HttpResponse("Hello from API")
@@ -155,6 +156,31 @@ def billsListSummmary(request):
     data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
 
     return data
+
+
+
+'''
+    # we can search bill by name, address, phone
+'''
+@api_view(['GET'])
+def getBillSummaryByName(request, searchValue):
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 21
+        searchCustomer = Customer.objects.filter(Q(name__icontains=searchValue) | Q(address__icontains=searchValue) | Q(phone__icontains=searchValue)) # __icontains  it make case insentive
+
+        bills = []
+        for c in searchCustomer:
+            bills.extend(list(Bill.objects.filter(customerId=c).all()))
+
+        result_page = paginator.paginate_queryset(bills, request)
+
+        serializer = BillSearchSerilizer(result_page, many=True)
+
+        data = paginator.get_paginated_response(serializer.data)
+        data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
+
+        return data    
 
 
 
