@@ -72,16 +72,13 @@ class BillSerilizer(serializers.ModelSerializer):
         fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
 
 
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 5
-    page_size_query_param = 'page_size'
-    max_page_size = 7
+
 '''
 # search bill
 '''
 class BillSearchSerilizer(serializers.ModelSerializer, APIView):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
-    # pagination_class =StandardResultsSetPagination
+
     class Meta:
         model = Bill
         fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
@@ -107,6 +104,7 @@ class BillSearchSerilizer(serializers.ModelSerializer, APIView):
         searchData['phone'] = customer['phone']
         searchData['customerId'] = customer['customerId']
         searchData['customerName'] = customer['name']
+        searchData['customerAddress'] = customer['address']
         searchData['productsWeight'] = rep['finalWeight']
         searchData['totalProduct'] = len(rep['billProduct'])
         searchData['customerProductWeight'] = rep['customerProductWeight']

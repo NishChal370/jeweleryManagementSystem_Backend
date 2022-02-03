@@ -143,10 +143,17 @@ def billsList(request):
 ##Get bill summary / bill search in frontend
 @api_view(['GET'])
 def billsListSummmary(request):
+    billType = request.GET.get('billType') # Query param
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
-    bills = Bill.objects.all().order_by('-date', '-billId')
+
+    if(billType != 'all'):
+        bills = Bill.objects.filter(billType = billType)
+    else:
+        bills = Bill.objects.all()
+
+    bills = bills.order_by('-date', '-billId')
 
     result_page = paginator.paginate_queryset(bills, request)
 
@@ -158,29 +165,38 @@ def billsListSummmary(request):
     return data
 
 
-
 '''
     # we can search bill by name, address, phone
 '''
 @api_view(['GET'])
 def getBillSummaryByName(request, searchValue):
+    billType = request.GET.get('billType') # Query param
 
-        paginator = PageNumberPagination()
-        paginator.page_size = 21
-        searchCustomer = Customer.objects.filter(Q(name__icontains=searchValue) | Q(address__icontains=searchValue) | Q(phone__icontains=searchValue)) # __icontains  it make case insentive
+    paginator = PageNumberPagination()
+    paginator.page_size = 21
+    searchCustomer = Customer.objects.filter(Q(name__icontains=searchValue) | Q(address__icontains=searchValue) | Q(phone__icontains=searchValue)) # __icontains  it make case insentive
 
-        bills = []
-        for c in searchCustomer:
-            bills.extend(list(Bill.objects.filter(customerId=c).all()))
+    billsIdList = []
+    for c in searchCustomer:# getting search customer bills id
+        if(billType == 'all'):
+            # billsIdList.extend(list(Bill.objects.filter(customerId=c).values_list('billId', flat=True)))
+            searchedBills = list(Bill.objects.filter(customerId=c).values_list('billId', flat=True))
+        else:
+            # billsIdList.extend(Bill.objects.filter(customerId=c).filter(billType= billType).values_list('billId', flat=True))
+            searchedBills = Bill.objects.filter(customerId=c).filter(billType= billType).values_list('billId', flat=True)
+        billsIdList.extend(searchedBills)
+        
 
-        result_page = paginator.paginate_queryset(bills, request)
+    filteredBills = Bill.objects.filter(billId__in=billsIdList).order_by('-date', '-billId')
 
-        serializer = BillSearchSerilizer(result_page, many=True)
+    result_page = paginator.paginate_queryset(filteredBills, request)
 
-        data = paginator.get_paginated_response(serializer.data)
-        data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
+    serializer = BillSearchSerilizer(result_page, many=True)
 
-        return data    
+    data = paginator.get_paginated_response(serializer.data)
+    data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
+
+    return data    
 
 
 
