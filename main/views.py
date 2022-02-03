@@ -145,13 +145,18 @@ def billsList(request):
 def billsListSummmary(request):
     billType = request.GET.get('billType') # Query param
 
+    billStatus = request.GET.get('billStatus')
+    print(billStatus)
     paginator = PageNumberPagination()
     paginator.page_size = 21
 
-    if(billType != 'all'):
+    if(billType != 'all'): # fiter by bill type {gold, silver}
         bills = Bill.objects.filter(billType = billType)
     else:
         bills = Bill.objects.all()
+
+    if(billStatus != 'all'): # fiter by bill status {submitted, draft}
+        bills = bills.filter(status = billStatus)
 
     bills = bills.order_by('-date', '-billId')
 
@@ -159,7 +164,7 @@ def billsListSummmary(request):
 
     serializer = BillSearchSerilizer(result_page, many=True)
 
-    data = paginator.get_paginated_response(serializer.data)
+    data = paginator.get_paginated_response(serializer.data) # current page with total page
     data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
 
     return data
@@ -171,29 +176,35 @@ def billsListSummmary(request):
 @api_view(['GET'])
 def getBillSummaryByName(request, searchValue):
     billType = request.GET.get('billType') # Query param
+    billStatus = request.GET.get('billStatus')
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
     searchCustomer = Customer.objects.filter(Q(name__icontains=searchValue) | Q(address__icontains=searchValue) | Q(phone__icontains=searchValue)) # __icontains  it make case insentive
 
     billsIdList = []
-    for c in searchCustomer:# getting search customer bills id
-        if(billType == 'all'):
-            # billsIdList.extend(list(Bill.objects.filter(customerId=c).values_list('billId', flat=True)))
+    # getting search customer bills id
+    for c in searchCustomer:
+        if(billType == 'all'): #filter by customnerId
             searchedBills = list(Bill.objects.filter(customerId=c).values_list('billId', flat=True))
-        else:
-            # billsIdList.extend(Bill.objects.filter(customerId=c).filter(billType= billType).values_list('billId', flat=True))
+        else: # filter by billType {gold, silver} & customnerId
             searchedBills = Bill.objects.filter(customerId=c).filter(billType= billType).values_list('billId', flat=True)
+
         billsIdList.extend(searchedBills)
         
 
-    filteredBills = Bill.objects.filter(billId__in=billsIdList).order_by('-date', '-billId')
+    searchedBills = Bill.objects.filter(billId__in=billsIdList)
+
+    if(billStatus != 'all'): # fiter by bill status {submitted, draft}
+        searchedBills = searchedBills.filter(status = billStatus)
+
+    filteredBills = searchedBills.order_by('-date', '-billId')
 
     result_page = paginator.paginate_queryset(filteredBills, request)
 
     serializer = BillSearchSerilizer(result_page, many=True)
 
-    data = paginator.get_paginated_response(serializer.data)
+    data = paginator.get_paginated_response(serializer.data)# current page with total page
     data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
 
     return data    
