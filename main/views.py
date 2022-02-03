@@ -1,5 +1,6 @@
 
 from math import e
+from sqlite3 import Date
 from django.http.response import HttpResponse
 
 from rest_framework.response import Response
@@ -144,21 +145,30 @@ def billsList(request):
 @api_view(['GET'])
 def billsListSummmary(request):
     billType = request.GET.get('billType') # Query param
-
     billStatus = request.GET.get('billStatus')
-    print(billStatus)
+    billDate = request.GET.get('billDate')
+    nowDate = datetime.datetime.now().date()
+
     paginator = PageNumberPagination()
     paginator.page_size = 21
+    
+    if(billDate is not None):
+        bills = Bill.objects.filter(date__range = [billDate, nowDate])
+    else:
+        bills =Bill.objects.all()
 
     if(billType != 'all'): # fiter by bill type {gold, silver}
-        bills = Bill.objects.filter(billType = billType)
-    else:
-        bills = Bill.objects.all()
+        # bills = Bill.objects.filter(billType = billType)
+        bills = bills.filter(billType = billType)
+    # else:
+    #     bills = bills
+        # bills = Bill.objects.all()
 
     if(billStatus != 'all'): # fiter by bill status {submitted, draft}
         bills = bills.filter(status = billStatus)
 
-    bills = bills.order_by('-date', '-billId')
+    if(billDate is None):
+        bills = bills.order_by('-date', '-billId')
 
     result_page = paginator.paginate_queryset(bills, request)
 
@@ -177,6 +187,8 @@ def billsListSummmary(request):
 def getBillSummaryByName(request, searchValue):
     billType = request.GET.get('billType') # Query param
     billStatus = request.GET.get('billStatus')
+    billDate = request.GET.get('billDate')
+    nowDate = datetime.datetime.now().date()
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
@@ -190,17 +202,21 @@ def getBillSummaryByName(request, searchValue):
         else: # filter by billType {gold, silver} & customnerId
             searchedBills = Bill.objects.filter(customerId=c).filter(billType= billType).values_list('billId', flat=True)
 
-        billsIdList.extend(searchedBills)
-        
+        billsIdList.extend(searchedBills)  
 
     searchedBills = Bill.objects.filter(billId__in=billsIdList)
 
+    if(billDate is not None):
+        searchedBills = searchedBills.filter(date__range = [billDate, nowDate])
+    else:
+        searchedBills =searchedBills.all()
+
     if(billStatus != 'all'): # fiter by bill status {submitted, draft}
         searchedBills = searchedBills.filter(status = billStatus)
+    else:
+        searchedBills = searchedBills.order_by('-date', '-billId')
 
-    filteredBills = searchedBills.order_by('-date', '-billId')
-
-    result_page = paginator.paginate_queryset(filteredBills, request)
+    result_page = paginator.paginate_queryset(searchedBills, request)
 
     serializer = BillSearchSerilizer(result_page, many=True)
 
