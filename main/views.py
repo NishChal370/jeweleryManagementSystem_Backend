@@ -11,7 +11,7 @@ import datetime
 from django.utils.timezone import now
 
 from main.models import Customer, Order, Bill, Product, Rate
-from main.serializers import BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
+from main.serializers import BillInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer
 
 from rest_framework.pagination import PageNumberPagination
 #Q objects that allow to complex lookups.
@@ -232,7 +232,7 @@ def getBillSummaryByName(request, searchValue):
 def billById(request, pk):
     try:
         bill = Bill.objects.get(billId=pk)
-        serializer = BillSerilizer(bill, many=False)
+        serializer = BillInfoSerilizer(bill, many=False)
 
         return Response(serializer.data)
     except:

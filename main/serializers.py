@@ -74,6 +74,24 @@ class BillSerilizer(serializers.ModelSerializer):
 
 
 '''
+    # to get all bill  and its customers in detail
+'''
+class BillInfoSerilizer(serializers.ModelSerializer):
+    billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
+    
+    class Meta:
+        model = Bill
+        fields = ('billId', 'orderId','date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+    
+    def to_representation(self, instance): # it shows all the customer insted of id
+        rep = super().to_representation(instance)
+        rep['customer'] = CustomerInfoSerilizer(instance.customerId).data
+
+        return rep
+
+
+
+'''
 # search bill
 '''
 class BillSearchSerilizer(serializers.ModelSerializer, APIView):
