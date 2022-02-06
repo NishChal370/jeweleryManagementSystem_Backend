@@ -1,18 +1,13 @@
-
 import re
 from django.db import models
 from django.db.models import fields
-
-from rest_framework import serializers
-
 from django.utils.timezone import now
-
+from rest_framework import serializers
+from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
 from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate
 
-from rest_framework.pagination import PageNumberPagination
-
-from rest_framework.generics import ListAPIView
-from rest_framework.views import APIView
 
 '''
  # Product
@@ -21,6 +16,7 @@ class ProductSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('productId', 'productName', 'netWeight', 'size', 'gemsName', 'gemsPrice')
+        # extra_kwargs = {'productId': {'required':False,'read_only':False, 'allow_null':True}}
 
 
 
@@ -31,7 +27,9 @@ class BillProductSerilizer(serializers.ModelSerializer):
     product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = BillProduct
-        fields = ('billId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
+        # remove billProductId if some error
+        fields = ('billProductId', 'billId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
+        # extra_kwargs = {'billProductId': {'required':False,'read_only':False, 'allow_null':True}}
     
     def to_representation(self, instance): # it shows all the product insted of id
         rep = super().to_representation(instance)
@@ -70,15 +68,15 @@ class BillSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
-
-
+        # extra_kwargs = {'billId': {'required':False,'read_only':False, 'allow_null':True}}
 
 '''
     # to get all bill  and its customers in detail
 '''
-class BillInfoSerilizer(serializers.ModelSerializer):
+# class BillInfoSerilizer(serializers.ModelSerializer):
+class BillDetailSerilizer(serializers.ModelSerializer):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
-    
+
     class Meta:
         model = Bill
         fields = ('billId', 'orderId','date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
@@ -92,7 +90,7 @@ class BillInfoSerilizer(serializers.ModelSerializer):
 
 
 '''
-# search bill
+# search bill in summary
 '''
 class BillSearchSerilizer(serializers.ModelSerializer, APIView):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
@@ -152,7 +150,6 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
         fields = ('customerId', 'name', 'address', 'phone', 'email', 'bills')
 
     def validate(self, value):
-        print(value)
         if 'bills' not in value :
             raise serializers.ValidationError({'message':'Bill is missing.'})
         elif len(value['bills']) < 1:
@@ -207,6 +204,91 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
                 BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
 
         return instance
+
+
+
+'''
+ # Product
+'''
+class ProductForUpdateSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('productId', 'productName', 'netWeight', 'size', 'gemsName', 'gemsPrice')
+        extra_kwargs = {'productId': {'required':False,'read_only':False, 'allow_null':True}}
+
+'''
+ # BillProduct
+'''
+class BillProductForUpdateSerilizer(serializers.ModelSerializer):
+    product = ProductForUpdateSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    class Meta:
+        model = BillProduct
+        # remove billProductId if some error
+        fields = ('billProductId', 'billId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
+        extra_kwargs = {'billProductId': {'required':False,'read_only':False, 'allow_null':True}}
+    
+    def to_representation(self, instance): # it shows all the product insted of id
+        rep = super().to_representation(instance)
+        rep['product'] = ProductSerilizer(instance.productId).data
+        return rep
+
+'''
+ # Bill
+'''
+class BillForUpdateSerilizer(serializers.ModelSerializer):
+    billProduct = BillProductForUpdateSerilizer(required=False, many=True, read_only=False, allow_null=True )
+    class Meta:
+        model = Bill
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+        extra_kwargs = {'billId': {'required':False,'read_only':False, 'allow_null':True}}
+
+
+'''
+ # Update saved bill {edit, delete}
+'''
+class UpdateExistingBillSerilizer(serializers.ModelSerializer):
+    bills = BillForUpdateSerilizer(required=False, many=True, read_only=False, allow_null=True)
+
+    class Meta:
+        model = Customer
+        fields = ('customerId', 'name', 'address', 'phone', 'email', 'bills')
+        
+    def update(self, instance, validated_data):
+        bill = validated_data.pop('bills')[0]
+
+        Customer.objects.filter(customerId = instance.customerId).update(**validated_data)
+
+        billProducts = bill.pop('billProduct')
+
+        Bill.objects.filter(billId= bill.get('billId')).update(**bill)
+
+        keep_ProductId_list = []
+        for billProduct in billProducts:
+            product = billProduct.pop('product')
+            #if new billProduct 
+            if 'billProductId' not in billProduct.keys():
+                newProduct = Product.objects.create(**product)
+
+                bill = Bill.objects.get(billId = bill.get('billId'))
+                BillProduct.objects.create(billId=bill, productId=newProduct, **billProduct)
+
+                keep_ProductId_list.append(newProduct.productId)
+            #if billProduct exists
+            else:
+                Product.objects.filter(productId = product.get('productId')).update(**product)
+                BillProduct.objects.filter(billProductId= billProduct.get('billProductId')).update(**billProduct)
+
+                keep_ProductId_list.append(product.get('productId'))
+
+        existing_ProductId_list = [c.productId for c in BillProduct.objects.filter(billId = bill.get('billId'))]  
+        #if product to be deleted
+        for existing_ProductId in existing_ProductId_list:
+            if existing_ProductId.productId not in keep_ProductId_list:
+                product = Product.objects.get(productId = existing_ProductId.productId)
+                product.delete()
+
+        return Customer.objects.get(customerId=instance.customerId)
+
 
 
 """
@@ -377,3 +459,141 @@ class CustomerInfoSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = ('customerId', 'name', 'address', 'phone', 'email')
+
+
+
+'''
+    # Get bill Detail only
+'''
+class BillInfoSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Bill
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
+
+
+
+'''
+ # BillProduct detail only
+'''
+class BillProductInfoSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = BillProduct
+        fields = ('billProductId', 'billId', 'productId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct')
+
+
+
+# class UpdateExistingBillSerilizer(serializers.ModelSerializer):
+#     # billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
+#     class Meta:
+#         model = Bill
+#         fields = ('billId', 'orderId', 'customer', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
+
+#         # fields = ('billId', 'orderId','date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct','customerId')
+    
+#     # def to_representation(self, instance): # it shows all the customer insted of id
+#     #     rep = super().to_representation(instance)
+#     #     rep['customer'] = CustomerInfoSerilizer(instance.customer.customerId).data
+
+#     #     return rep
+
+#     def update(self, instance, validate_data):
+#         print("FDgdfgdfgdfgdfg")
+#         print("Update")
+#         print(instance)
+#         print()
+#         # validate_data['customer'] = instance['customer']
+#         print(validate_data)
+#         return instance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # """
+# #  # it register customer and add / generate their bill.
+# #  # if customer already register  generate bill for existing customer
+# # """
+# # class GenerateBillSerilizer(serializers.ModelSerializer):
+# #     bills = BillSerilizer(required=False, many=True, read_only=False, allow_null=True)
+# #     class Meta:
+# #         model = Customer
+# #         fields = ('customerId', 'name', 'address', 'phone', 'email', 'bills')
+
+# #     def validate(self, value):
+# #         print(value)
+# #         if 'bills' not in value :
+# #             raise serializers.ValidationError({'message':'Bill is missing.'})
+# #         elif len(value['bills']) < 1:
+# #             raise serializers.ValidationError({'message':'Bill is missing.'})
+
+# #         for bill in value['bills']:
+# #             if 'billProduct' not in bill:
+# #                 raise serializers.ValidationError({'message':'BillProduct is missing.'})
+# #             elif len(bill['billProduct']) < 1:
+# #                 raise serializers.ValidationError({'messsage':'BillProduct is missing.'}) 
+
+# #             for billProduct in bill['billProduct']:
+                
+# #                 if 'product' not in billProduct:
+# #                     raise serializers.ValidationError({'message':'Product is missing.'})
+
+# #         return value
+
+
+# #     def create(self, validated_data):
+# #         bills = validated_data.pop('bills')
+# #         #create customer
+# #         customer = Customer.objects.create(**validated_data) 
+
+# #         for bill in bills :
+# #             billProducts = bill.pop('billProduct')
+# #             #create bill
+# #             newBill = Bill.objects.create(customerId=customer, **bill)
+
+# #             for billProduct in billProducts:
+# #                 product = billProduct.pop('product')
+# #                 #create product
+# #                 newProduct = Product.objects.create(**product)
+# #                 #create billProduct
+# #                 BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
+                
+# #         return customer
+    
+# #     def update(self, instance, validated_data):
+# #         bills = validated_data.pop('bills')
+
+# #         for bill in bills :
+# #             billProducts = bill.pop('billProduct')
+# #             #add bill in for existing customer
+# #             newBill = Bill.objects.create(customerId=instance, **bill)
+
+# #             for billProduct in billProducts:
+# #                 product = billProduct.pop('product')
+# #                 # add product for existing customer
+# #                 newProduct = Product.objects.create(**product)
+# #                 # add billProduct for existing customer
+# #                 BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
+
+# #         return instance
