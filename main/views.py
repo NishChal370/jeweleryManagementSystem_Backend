@@ -97,16 +97,16 @@ def order(request, pk):
 
 
 ##Post orders
-@api_view(['POST'])
-def placeOrder(request):
-    newOrder = OrderSerilizer(data= request.data)
+# # @api_view(['POST'])
+# # def placeOrder(request):
+# #     newOrder = OrderSerilizer(data= request.data)
 
-    if newOrder.is_valid():
-        newOrder.save()
+# #     if newOrder.is_valid():
+# #         newOrder.save()
 
-        return Response(newOrder.data)
-    else:
-        return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
+# #         return Response(newOrder.data)
+# #     else:
+# #         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -125,7 +125,6 @@ def generateOrder(request):
 
         return Response(newOrder.data)
     else:
-        
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -133,7 +132,8 @@ def generateOrder(request):
 ##Getcustomer Order
 @api_view(['GET'])
 def getOrders(request):
-    customers = Customer.objects.all()
+    #get only those customer who have ordered
+    customers = Customer.objects.filter(customerId__in = list(Order.objects.values_list('customerId', flat=True)))
     serializer = PlaceOrderSerilizer(customers, many=True)
 
     return Response(serializer.data)
@@ -179,19 +179,19 @@ def billsListSummmary(request):
     paginator.page_size = 21
     
     if(billDate is not None):
-        bills = Bill.objects.filter(date__range = [billDate, nowDate])
+        bills = Bill.objects.filter(date__range = [billDate, nowDate]).order_by('-date', '-billId')
     else:
-        bills =Bill.objects.all()
+        bills =Bill.objects.all().order_by('-date', '-billId')
 
     if(billType != 'all'): # fiter by bill type {gold, silver}
         # bills = Bill.objects.filter(billType = billType)
-        bills = bills.filter(billType = billType)
+        bills = bills.filter(billType = billType).order_by('-date', '-billId')
     # else:
     #     bills = bills
         # bills = Bill.objects.all()
 
     if(billStatus != 'all'): # fiter by bill status {submitted, draft}
-        bills = bills.filter(status = billStatus)
+        bills = bills.filter(status = billStatus).order_by('-date', '-billId')
 
     if(billDate is None):
         bills = bills.order_by('-date', '-billId')

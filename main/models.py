@@ -21,6 +21,16 @@ class Customer(models.Model):
 
 
 class Order(models.Model):
+    bill_status = [
+        ('pending','PENDING'),
+        ('inprogress','INPROGRESS'),
+        ('submitted','SUBMITTED'),
+    ]
+    bill_type = [
+        ('gold', 'GOLD'),
+        ('silver', 'SILVER')
+    ]
+
     orderId = models.AutoField(primary_key=True, null=False)
     customerId = models.ForeignKey(Customer, null=True, on_delete=CASCADE, related_name='orders')
     date = models.DateField(null=False, default=now)
@@ -28,10 +38,13 @@ class Order(models.Model):
     advanceAmount = models.FloatField(null=True, blank = True)
     submittionDate = models.DateField(null=False, blank = True)
     submittedDate = models.DateField(null=True, blank = True)
-    design = models.ImageField( null=True, blank=True)
-    status = models.TextField(null=True)
-    remark = models.TextField(null=True)
+    #design = models.ImageField( null=True, blank=True)
+    #status = models.TextField(null=True)
+    remark = models.TextField(null=True, blank=True)
 
+    customerProductWeight = models.FloatField(null=True, blank = True)
+    billType = models.CharField(max_length=11, null=False, choices=bill_type, default='gold')
+    status = models.CharField(max_length=11, null=False, choices=bill_status, default='pending')
     def __str__(self):
         return f'{self.orderId}'
 
@@ -74,7 +87,7 @@ class Product(models.Model):
     productId = models.AutoField(primary_key=True, null=False)
     productName = models.CharField(max_length=50, null=False)
     netWeight = models.FloatField()
-    size = models.FloatField()
+    size = models.FloatField(null=True, blank=True, default=0)
     gemsName = models.CharField(max_length=50, null=True, blank=True)
     gemsPrice = models.FloatField(null=True, blank=True)
 
@@ -99,15 +112,18 @@ class BillProduct(models.Model):
 
 class OrderProduct(models.Model):
     order_status = [
-        ('P','Pending'),
-        ('S','Submitted'),
+        ('pending','PENDING'),
+        ('inprogress','INPROGRESS'),
+        ('submitted','SUBMITTED'),
     ]
     orderProductId = models.AutoField(primary_key=True, null=False)
     orderId = models.ForeignKey(Order, null=True, on_delete=CASCADE, related_name='orderProducts')
     productId = models.ForeignKey(Product, null=True, on_delete=CASCADE, related_name='orderProduct')
     totalWeight = models.FloatField(null=True, blank=True)
-    status = models.CharField(max_length=11, null=False, choices=order_status, default='Pending')
+    status = models.CharField(max_length=11, null=False, choices=order_status, default='pending')
 
+    design = models.ImageField( null=True, blank=True)
+    quantity = models.FloatField(null=True, blank=True, default=1)
     def __str__(self):
         return f'{self.orderProductId}'
 

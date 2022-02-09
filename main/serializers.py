@@ -16,7 +16,6 @@ class ProductSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('productId', 'productName', 'netWeight', 'size', 'gemsName', 'gemsPrice')
-        # extra_kwargs = {'productId': {'required':False,'read_only':False, 'allow_null':True}}
 
 
 
@@ -29,7 +28,6 @@ class BillProductSerilizer(serializers.ModelSerializer):
         model = BillProduct
         # remove billProductId if some error
         fields = ('billProductId', 'billId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct','product')
-        # extra_kwargs = {'billProductId': {'required':False,'read_only':False, 'allow_null':True}}
     
     def to_representation(self, instance): # it shows all the product insted of id
         rep = super().to_representation(instance)
@@ -42,11 +40,16 @@ class BillProductSerilizer(serializers.ModelSerializer):
  # OrderProduct
 '''
 class OrderProductSerilizer(serializers.ModelSerializer):
-    orderProduct = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    # orderProduct = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = OrderProduct
-        fields = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status', 'orderProduct')
-
+        # fields = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status', 'orderProduct')
+        fields = ('orderProductId', 'orderId', 'totalWeight', 'status', 'product')
+    def to_representation(self, instance): # it shows all the product insted of id
+        rep = super().to_representation(instance)
+        rep['product'] = ProductSerilizer(instance.productId).data
+        return rep
 
 
 '''
@@ -56,7 +59,8 @@ class OrderSerilizer(serializers.ModelSerializer):
     orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model = Order
-        fields = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark', 'orderProducts')
+        # fields = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark', 'orderProducts')
+        fields = ('orderId', 'customerId', 'date', 'billType', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts')
 
 
 
@@ -68,12 +72,12 @@ class BillSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
-        # extra_kwargs = {'billId': {'required':False,'read_only':False, 'allow_null':True}}
+
+
 
 '''
     # to get all bill  and its customers in detail
 '''
-# class BillInfoSerilizer(serializers.ModelSerializer):
 class BillDetailSerilizer(serializers.ModelSerializer):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
 
@@ -243,6 +247,7 @@ class BillForUpdateSerilizer(serializers.ModelSerializer):
         extra_kwargs = {'billId': {'required':False,'read_only':False, 'allow_null':True}}
 
 
+
 '''
  # Update saved bill {edit, delete}
 '''
@@ -314,8 +319,9 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'messsage':'OrderProduct is missing.'}) 
 
             for orderProducts in order['orderProducts']:
-                if 'orderProduct' not in orderProducts:
-                    raise serializers.ValidationError({'message':'Product is missing.'})
+                # if 'orderProduct' not in orderProducts:
+                if 'product' not in orderProducts:
+                    raise serializers.ValidationError({'message':'Product is sssmissing.'})
 
         return value
 
@@ -331,7 +337,8 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
             newOrder = Order.objects.create(customerId=customer, **order)
 
             for orderProduct in orderProducts:
-                product = orderProduct.pop('orderProduct')
+                # product = orderProduct.pop('orderProduct')
+                product = orderProduct.pop('product')
                 #create product
                 newProduct = Product.objects.create(**product)
                 #create orderProduct
@@ -348,7 +355,8 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
             newOrder = Order.objects.create(customerId=instance, **order)
 
             for orderProduct in orderProducts:
-                product = orderProduct.pop('orderProduct')
+                # product = orderProduct.pop('orderProduct')
+                product = orderProduct.pop('product')
                 # add product for existing customer
                 newProduct = Product.objects.create(**product)
                 # add orderProduct for existing customer
@@ -384,7 +392,7 @@ class OrderBillSerilizer(serializers.ModelSerializer):
         orderProduct = OrderProduct.objects.get(orderId = order.orderId)
 
         bill = Bill.objects.create(**validated_data) 
-        BillProduct.objects.create(billId=bill, productId=orderProduct.productId)
+        BillProduct.objects.create(billId=bill, productId=orderProduct.productId, totalWeight= orderProduct.totalWeight)
 
         order.status = 'S'
         order.save()
