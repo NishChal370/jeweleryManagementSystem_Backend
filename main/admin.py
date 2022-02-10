@@ -22,7 +22,7 @@ class BillDisplay(admin.ModelAdmin):
 
 class OrderDisplay(admin.ModelAdmin):
     # list_display = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark')
-    list_display = ('orderId', 'customerId', 'date', 'billType', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark')
+    list_display = ('orderId', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark')
 
 
 

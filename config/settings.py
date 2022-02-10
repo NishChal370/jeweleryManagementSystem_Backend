@@ -131,7 +131,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-MEDIA_URL = 'images/'
+# MEDIA_URL = 'images/'
 
 STATICFILES_DIR = [
     os.path.join(BASE_DIR, 'static')
@@ -151,3 +151,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 
 ]
+
+
+#STATIC_URL = '/static/'
+#MEDIA_ROOT = BASE_DIR/'uploads'
+#MEDIA_URL = '/images/'

@@ -15,7 +15,7 @@ from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
 from main.models import BillProduct, Customer, Order, Bill, Product, Rate
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer
 
 
 
@@ -109,11 +109,13 @@ def order(request, pk):
 # #         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
+# from rest_framework.parsers import MultiPartParser
+# from rest_framework.decorators import parser_classes
+# @parser_classes((MultiPartParser, ))
 ##Generate Order
 @api_view(['POST'])
 def generateOrder(request):
-
+    print(request.data)
     if(Customer.objects.filter(name= request.data['name']).exists()):
         oldCustomer = Customer.objects.get(name= request.data['name'])
         newOrder = PlaceOrderSerilizer(instance= oldCustomer, data= request.data)
@@ -125,6 +127,9 @@ def generateOrder(request):
 
         return Response(newOrder.data)
     else:
+        print(newOrder.error_messages)
+        print(newOrder._errors)
+        print(newOrder.errors)
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -151,6 +156,23 @@ def generateOrderBill(request):
     else:
 
         return Response(orderBill.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+def orderListSummary(request):
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    orders =Order.objects.all().order_by('-date', '-orderId')
+    result_page = paginator.paginate_queryset(orders, request)
+
+    serializer = OrderSearchSerilizer(result_page, many =True)
+
+    data = paginator.get_paginated_response(serializer.data) # current page with total page
+    data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
+
+    return data
+    # return Response(serilizer.data)
 
 
 

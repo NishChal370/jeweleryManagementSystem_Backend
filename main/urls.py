@@ -16,6 +16,7 @@ urlpatterns = [
     ## Orders
     path('orders/',views.orderList, name='orders'),
     path('order/<int:pk>', views.order, name='order'),
+    path('orders/summary/',views.orderListSummary, name='orders-list-summary'),
     path('orders-list/',views.getOrders, name='orders-list'),
     # # path('order-place/', views.placeOrder, name='place-order'),
     path('place-order/', views.generateOrder, name='place-order'),

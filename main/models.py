@@ -21,12 +21,12 @@ class Customer(models.Model):
 
 
 class Order(models.Model):
-    bill_status = [
+    order_status = [
         ('pending','PENDING'),
         ('inprogress','INPROGRESS'),
         ('submitted','SUBMITTED'),
     ]
-    bill_type = [
+    order_type = [
         ('gold', 'GOLD'),
         ('silver', 'SILVER')
     ]
@@ -43,8 +43,8 @@ class Order(models.Model):
     remark = models.TextField(null=True, blank=True)
 
     customerProductWeight = models.FloatField(null=True, blank = True)
-    billType = models.CharField(max_length=11, null=False, choices=bill_type, default='gold')
-    status = models.CharField(max_length=11, null=False, choices=bill_status, default='pending')
+    type = models.CharField(max_length=11, null=False, choices=order_type, default='gold')
+    status = models.CharField(max_length=11, null=False, choices=order_status, default='pending')
     def __str__(self):
         return f'{self.orderId}'
 
@@ -86,7 +86,7 @@ class Bill(models.Model):
 class Product(models.Model):
     productId = models.AutoField(primary_key=True, null=False)
     productName = models.CharField(max_length=50, null=False)
-    netWeight = models.FloatField()
+    netWeight = models.FloatField(null=True, blank=True)
     size = models.FloatField(null=True, blank=True, default=0)
     gemsName = models.CharField(max_length=50, null=True, blank=True)
     gemsPrice = models.FloatField(null=True, blank=True)
@@ -122,7 +122,7 @@ class OrderProduct(models.Model):
     totalWeight = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=11, null=False, choices=order_status, default='pending')
 
-    design = models.ImageField( null=True, blank=True)
+    design = models.ImageField(null=True, blank=True, upload_to='images', )
     quantity = models.FloatField(null=True, blank=True, default=1)
     def __str__(self):
         return f'{self.orderProductId}'

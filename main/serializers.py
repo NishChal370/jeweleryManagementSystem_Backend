@@ -1,3 +1,5 @@
+from asyncio.windows_events import NULL
+from pyexpat import model
 import re
 from django.db import models
 from django.db.models import fields
@@ -45,7 +47,7 @@ class OrderProductSerilizer(serializers.ModelSerializer):
     class Meta:
         model = OrderProduct
         # fields = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status', 'orderProduct')
-        fields = ('orderProductId', 'orderId', 'totalWeight', 'status', 'product')
+        fields = ('orderProductId', 'orderId', 'totalWeight', 'status', 'design', 'quantity', 'product')
     def to_representation(self, instance): # it shows all the product insted of id
         rep = super().to_representation(instance)
         rep['product'] = ProductSerilizer(instance.productId).data
@@ -60,7 +62,7 @@ class OrderSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Order
         # fields = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark', 'orderProducts')
-        fields = ('orderId', 'customerId', 'date', 'billType', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts')
+        fields = ('orderId', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts')
 
 
 
@@ -92,12 +94,61 @@ class BillDetailSerilizer(serializers.ModelSerializer):
         return rep
 
 
+'''
+ #Search bill in summary
+'''
+class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
+    orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    bill = BillSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    class Meta:
+        model = Order
+        fields = ('orderId', 'bill', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts' )
+
+    def to_representation(self, instance):
+        searchData = {'orderId': '', 'billId': '', 'customerId': '', 'customerName': '', 'phone': '', 'type': '', 'totalOrderedProduct': '', 'advanceAmount': '', 'customerProductWeight': '', 'date':'','submittionDate': '', 'submittedDate':'', 'status': ''}
+        customer = CustomerSerilizer(instance.customerId).data
+
+        rep = super().to_representation(instance)
+        searchData['date'] = rep['date']
+        searchData['orderId'] = rep['orderId']
+        searchData['billId'] = "-" if rep['bill'] is None else rep['bill']
+        searchData['customerId'] = rep['customerId']
+        searchData['customerName'] = customer['name']
+        searchData['phone'] = customer['phone']
+        searchData['type'] = rep['type']
+        searchData['totalOrderedProduct'] = len(rep['orderProducts'])
+        searchData['advanceAmount'] = "-" if rep['advanceAmount'] is None else rep['advanceAmount']
+        searchData['customerProductWeight'] = "-" if rep['customerProductWeight'] is None else rep['customerProductWeight']
+        searchData['submittedDate'] = "-" if rep['submittedDate'] is None else rep['submittedDate']
+        searchData['submittionDate'] = rep['submittionDate']
+
+        
+        #check if all order complete or not
+        progressList = []
+        for orderProduct in rep['orderProducts']:
+            progressList.append(orderProduct['status'])
+
+        if len(progressList) >1:
+            if 'pending' in progressList and 'submitted' in progressList:
+                progressList = ['completed']
+            else:
+                progressList = progressList
+
+        if rep['submittedDate'] != None:
+            progressList = ['completed']
+
+        searchData['status'] = progressList[0]
+
+
+        return searchData
+
+
 
 '''
 # search bill in summary
 '''
 class BillSearchSerilizer(serializers.ModelSerializer, APIView):
-    billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
+    billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True)
 
     class Meta:
         model = Bill
