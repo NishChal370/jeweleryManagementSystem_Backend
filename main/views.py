@@ -15,7 +15,7 @@ from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
 from main.models import BillProduct, Customer, Order, Bill, Product, Rate
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer
 
 
 
@@ -88,7 +88,8 @@ def orderList(request):
 def order(request, pk):
     try:
         order = Order.objects.get(orderId=pk)
-        serializer = OrderSerilizer(order, many=False)
+        # serializer = OrderSerilizer(order, many=False)
+        serializer = CustomerOrderSerilizer(order, many=False)
 
         return Response(serializer.data)
     except:
@@ -161,9 +162,38 @@ def generateOrderBill(request):
 
 @api_view(['GET'])
 def orderListSummary(request):
+    date = request.GET.get('date')
+    type = request.GET.get('type') # Query param
+    status = request.GET.get('status')
+    customerInfo = request.GET.get('customerInfo')
+    
     paginator = PageNumberPagination()
     paginator.page_size = 10
-    orders =Order.objects.all().order_by('-date', '-orderId')
+    
+    if customerInfo != None:
+        searchedCustomer = Customer.objects.filter(Q(name__icontains=customerInfo) | Q(address__icontains=customerInfo) | Q(phone__icontains=customerInfo))
+    
+    customerIdList = []
+    for c in searchedCustomer:
+        customerIdList.append(c.customerId)
+
+    if len(customerIdList) >0:
+        orders = Order.objects.filter(customerId__in= customerIdList)
+    else:
+        orders = Order.objects.all()
+
+    if date != 'None':
+        orders = orders.filter(date__range = [date, datetime.datetime.now().date()])
+
+    if type != 'all':
+        orders = orders.filter(type= type)
+    
+    if status != 'all':
+        orders = orders.filter(status = status)
+
+    if date == 'None':
+        orders = orders.order_by('-date', '-orderId')
+
     result_page = paginator.paginate_queryset(orders, request)
 
     serializer = OrderSearchSerilizer(result_page, many =True)
@@ -172,7 +202,6 @@ def orderListSummary(request):
     data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
 
     return data
-    # return Response(serilizer.data)
 
 
 
@@ -198,7 +227,7 @@ def billsListSummmary(request):
     nowDate = datetime.datetime.now().date()
 
     paginator = PageNumberPagination()
-    paginator.page_size = 21
+    paginator.page_size = 10
     
     if(billDate is not None):
         bills = Bill.objects.filter(date__range = [billDate, nowDate]).order_by('-date', '-billId')
@@ -238,7 +267,7 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     nowDate = datetime.datetime.now().date()
 
     paginator = PageNumberPagination()
-    paginator.page_size = 21
+    paginator.page_size = 10
     searchCustomer = Customer.objects.filter(Q(name__icontains=searchValue) | Q(address__icontains=searchValue) | Q(phone__icontains=searchValue)) # __icontains  it make case insentive
 
     billsIdList = []

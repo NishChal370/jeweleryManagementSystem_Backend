@@ -123,26 +123,42 @@ class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
         searchData['submittionDate'] = rep['submittionDate']
 
         
-        #check if all order complete or not
-        progressList = []
-        for orderProduct in rep['orderProducts']:
-            progressList.append(orderProduct['status'])
+        # check if all order complete or not
+        # progressList = []
+        # for orderProduct in rep['orderProducts']:
+        #     progressList.append(orderProduct['status'])
 
-        if len(progressList) >1:
-            if 'pending' in progressList and 'submitted' in progressList:
-                progressList = ['completed']
-            else:
-                progressList = progressList
+        # if len(progressList) >1:
+        #     print(progressList)
+        #     if 'pending' in progressList and 'submitted' in progressList:
+        #         progressList = ['completed']
+        #     else:
+        #         progressList = progressList
 
-        if rep['submittedDate'] != None:
-            progressList = ['completed']
+        # if rep['submittedDate'] != None:
+        #     progressList = ['completed']
 
-        searchData['status'] = progressList[0]
-
+        # searchData['status'] = progressList[0]
+        searchData['status'] = rep['status']
 
         return searchData
 
 
+'''
+    # order detail
+'''
+class CustomerOrderSerilizer(serializers.ModelSerializer):
+    orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    class Meta:
+        model = Order
+        fields = ('orderId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts')
+    
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        customer =  CustomerInfoSerilizer(instance.customerId).data
+        customer['orders'] = rep
+    
+        return customer
 
 '''
 # search bill in summary
