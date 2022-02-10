@@ -145,7 +145,7 @@ class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
 
 
 '''
-    # order detail
+    # order detail summary
 '''
 class CustomerOrderSerilizer(serializers.ModelSerializer):
     orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True)
@@ -279,7 +279,7 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
 
 
 '''
- # Product
+ # Product for update
 '''
 class ProductForUpdateSerilizer(serializers.ModelSerializer):
     class Meta:
@@ -288,7 +288,7 @@ class ProductForUpdateSerilizer(serializers.ModelSerializer):
         extra_kwargs = {'productId': {'required':False,'read_only':False, 'allow_null':True}}
 
 '''
- # BillProduct
+ # BillProduct for update bill
 '''
 class BillProductForUpdateSerilizer(serializers.ModelSerializer):
     product = ProductForUpdateSerilizer(required=False, many=False, read_only=False, allow_null=True )
@@ -304,7 +304,7 @@ class BillProductForUpdateSerilizer(serializers.ModelSerializer):
         return rep
 
 '''
- # Bill
+ # Bill update
 '''
 class BillForUpdateSerilizer(serializers.ModelSerializer):
     billProduct = BillProductForUpdateSerilizer(required=False, many=True, read_only=False, allow_null=True )
@@ -338,7 +338,7 @@ class UpdateExistingBillSerilizer(serializers.ModelSerializer):
         for billProduct in billProducts:
             product = billProduct.pop('product')
             #if new billProduct 
-            if 'billProductId' not in billProduct.keys():
+            if 'billProductId' not in billProduct.keys(): 
                 newProduct = Product.objects.create(**product)
 
                 bill = Bill.objects.get(billId = bill.get('billId'))
@@ -430,6 +430,77 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
                 OrderProduct.objects.create(orderId=newOrder, productId=newProduct, **orderProduct)
 
         return instance
+
+
+
+'''
+ # OrderProduct for Update
+'''
+class OrderProductForUpdateSerilizer(serializers.ModelSerializer):
+    product = ProductForUpdateSerilizer(required=False, many=False, read_only=False, allow_null=True )
+    class Meta:
+        model = OrderProduct
+        fields = ('orderProductId', 'orderId','productId', 'totalWeight', 'status', 'design', 'quantity', 'product')
+        extra_kwargs = {'orderProductId': {'required':False,'read_only':False, 'allow_null':True}}
+
+'''
+ # Order for update
+'''
+class OrderForUpdateSerilizer(serializers.ModelSerializer):
+    orderProducts = OrderProductForUpdateSerilizer(required=False, many=True, read_only=False, allow_null=True )
+    class Meta:
+        model = Order
+        fields = ('orderId', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts')
+        extra_kwargs = {'orderId': {'required':False,'read_only':False, 'allow_null':True}}
+
+'''
+ # Update order {edit, delete}
+'''
+class UpdateOrderSerilizer(serializers.ModelSerializer):
+    orders = OrderForUpdateSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    class Meta:
+        model = Customer
+        fields = ('customerId', 'name', 'address', 'phone', 'email', 'orders')
+    
+    def update(self, instance, validated_data):
+        order = validated_data.pop('orders')[0]
+
+        Customer.objects.filter(customerId = instance.customerId).update(**validated_data)
+
+        orderProducts = order.pop('orderProducts')
+
+        Order.objects.filter(orderId= order.get('orderId')).update(**order)
+
+        keep_ProductId_list = []
+        for orderProduct in orderProducts:
+            product = orderProduct.pop('product')
+
+            editingOrderId = orderProduct.get('orderId')
+            #if new orderProduct 
+            if 'orderProductId' not in orderProduct.keys():
+                newProduct = Product.objects.create(**product)
+
+                order = Order.objects.get(orderId = order.get('orderId'))
+
+                OrderProduct.objects.create(orderId=order, productId=newProduct, **orderProduct)
+
+                keep_ProductId_list.append(newProduct.productId)
+            #if orderProduct exists
+            else:
+                Product.objects.filter(productId = product.get('productId')).update(**product)
+
+                OrderProduct.objects.filter(orderProductId= orderProduct.get('orderProductId')).update(**orderProduct)
+
+                keep_ProductId_list.append(product.get('productId'))
+
+        existing_ProductId_list = [c.productId for c in OrderProduct.objects.filter(orderId = editingOrderId)]  
+        #if product to be deleted
+        for existing_ProductId in existing_ProductId_list:
+            if existing_ProductId.productId not in keep_ProductId_list:
+                product = Product.objects.get(productId = existing_ProductId.productId)
+                product.delete()
+
+        return Customer.objects.get(customerId=instance.customerId)
 
 
 

@@ -1,4 +1,5 @@
 
+from ast import Return
 from itertools import product
 from math import e
 from sqlite3 import Date
@@ -15,7 +16,7 @@ from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
 from main.models import BillProduct, Customer, Order, Bill, Product, Rate
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
 
 
 
@@ -133,6 +134,20 @@ def generateOrder(request):
         print(newOrder.errors)
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+#update customer order 
+@api_view(['POST'])
+def orderUpdate(request):
+    print(request.data)
+    oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
+    serilizer = UpdateOrderSerilizer(instance=oldCustomer, data=request.data)
+
+    if serilizer.is_valid():
+        serilizer.save()
+
+        return Response(serilizer.data)
+    
+    return Response(serilizer.errors)
 
 
 ##Getcustomer Order
