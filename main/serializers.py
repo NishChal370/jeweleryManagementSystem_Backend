@@ -1,6 +1,9 @@
 from asyncio.windows_events import NULL
+import collections
+import datetime
 from pyexpat import model
 import re
+from typing import OrderedDict
 from django.db import models
 from django.db.models import fields
 from django.utils.timezone import now
@@ -42,7 +45,6 @@ class BillProductSerilizer(serializers.ModelSerializer):
  # OrderProduct
 '''
 class OrderProductSerilizer(serializers.ModelSerializer):
-    # orderProduct = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = OrderProduct
@@ -99,10 +101,10 @@ class BillDetailSerilizer(serializers.ModelSerializer):
 '''
 class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
     orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True)
-    bill = BillSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    orders = BillSerilizer(required=False, many=True, read_only=False, allow_null=True)
     class Meta:
         model = Order
-        fields = ('orderId', 'bill', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts' )
+        fields = ('orderId', 'orders', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts' )
 
     def to_representation(self, instance):
         searchData = {'orderId': '', 'billId': '', 'customerId': '', 'customerName': '', 'phone': '', 'type': '', 'totalOrderedProduct': '', 'advanceAmount': '', 'customerProductWeight': '', 'date':'','submittionDate': '', 'submittedDate':'', 'status': ''}
@@ -111,7 +113,7 @@ class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
         rep = super().to_representation(instance)
         searchData['date'] = rep['date']
         searchData['orderId'] = rep['orderId']
-        searchData['billId'] = "-" if rep['bill'] is None else rep['bill']
+        searchData['billId'] = "-" if len(rep['orders'])<=0 else rep['orders'][0].get('billId')
         searchData['customerId'] = rep['customerId']
         searchData['customerName'] = customer['name']
         searchData['phone'] = customer['phone']
@@ -139,6 +141,9 @@ class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
         #     progressList = ['completed']
 
         # searchData['status'] = progressList[0]
+        # if searchData['billId'] != '-':
+        #     searchData['status'] = 'submitted'
+        # else:
         searchData['status'] = rep['status']
 
         return searchData
@@ -242,6 +247,10 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         bills = validated_data.pop('bills')
+
+        if bill.get('orderId') != None:
+
+            Order.objects.filter(orderId = bill.get('orderId')).update(status = 'submitted', submittedDate = datetime.datetime.now())
         #create customer
         customer = Customer.objects.create(**validated_data) 
 
@@ -261,6 +270,9 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         bills = validated_data.pop('bills')
+
+        if bills[0].get('orderId') != None:
+            Order.objects.filter(orderId = bills[0].get('orderId').orderId).update(status = 'submitted')
 
         for bill in bills :
             billProducts = bill.pop('billProduct')
@@ -328,6 +340,9 @@ class UpdateExistingBillSerilizer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         bill = validated_data.pop('bills')[0]
 
+        if bill.get('orderId') != None:
+            Order.objects.filter(orderId = bill.get('orderId').orderId).update(status = 'submitted', submittedDate = datetime.datetime.now())
+
         Customer.objects.filter(customerId = instance.customerId).update(**validated_data)
 
         billProducts = bill.pop('billProduct')
@@ -338,7 +353,9 @@ class UpdateExistingBillSerilizer(serializers.ModelSerializer):
         for billProduct in billProducts:
             product = billProduct.pop('product')
             #if new billProduct 
-            if 'billProductId' not in billProduct.keys(): 
+            if 'billProductId' not in billProduct.keys():
+                print("In")
+                print(product) 
                 newProduct = Product.objects.create(**product)
 
                 bill = Bill.objects.get(billId = bill.get('billId'))
@@ -352,7 +369,10 @@ class UpdateExistingBillSerilizer(serializers.ModelSerializer):
 
                 keep_ProductId_list.append(product.get('productId'))
 
-        existing_ProductId_list = [c.productId for c in BillProduct.objects.filter(billId = bill.get('billId'))]  
+        if type(bill) is collections.OrderedDict:
+            existing_ProductId_list = [c.productId for c in BillProduct.objects.filter(billId = bill.get('billId'))] 
+        else:
+            existing_ProductId_list = [c.productId for c in BillProduct.objects.filter(billId = bill)]  
         #if product to be deleted
         for existing_ProductId in existing_ProductId_list:
             if existing_ProductId.productId not in keep_ProductId_list:

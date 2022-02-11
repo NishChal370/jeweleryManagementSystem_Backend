@@ -66,7 +66,7 @@ class Bill(models.Model):
     date = models.DateField(null=False, default=now)
     rate = models.FloatField(null=True, blank=True)
     billType = models.CharField(max_length=11, null=False, choices=bill_type, default='gold')
-    customerProductWeight = models.FloatField(null=True, blank=True)
+    customerProductWeight = models.FloatField(null=True, blank=True, default=0)
     customerProductAmount = models.FloatField(null=True, blank=True)
     finalWeight = models.FloatField(null=True, blank=True)
     grandTotalWeight = models.FloatField(null=True, blank=True)

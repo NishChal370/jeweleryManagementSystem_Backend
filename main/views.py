@@ -89,7 +89,6 @@ def orderList(request):
 def order(request, pk):
     try:
         order = Order.objects.get(orderId=pk)
-        # serializer = OrderSerilizer(order, many=False)
         serializer = CustomerOrderSerilizer(order, many=False)
 
         return Response(serializer.data)
@@ -129,16 +128,12 @@ def generateOrder(request):
 
         return Response(newOrder.data)
     else:
-        print(newOrder.error_messages)
-        print(newOrder._errors)
-        print(newOrder.errors)
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 #update customer order 
 @api_view(['POST'])
 def orderUpdate(request):
-    print(request.data)
     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
     serilizer = UpdateOrderSerilizer(instance=oldCustomer, data=request.data)
 
@@ -237,30 +232,26 @@ def billsList(request):
 @api_view(['GET'])
 def billsListSummmary(request):
     billType = request.GET.get('billType') # Query param
-    billStatus = request.GET.get('billStatus')
     billDate = request.GET.get('billDate')
+    billStatus = request.GET.get('billStatus')
     nowDate = datetime.datetime.now().date()
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
     
-    if(billDate is not None):
-        bills = Bill.objects.filter(date__range = [billDate, nowDate]).order_by('-date', '-billId')
+    if billDate is not None:
+        bills = Bill.objects.filter(date__range = [billDate, nowDate]) #.order_by('-date', '-billId')
     else:
         bills =Bill.objects.all().order_by('-date', '-billId')
 
-    if(billType != 'all'): # fiter by bill type {gold, silver}
-        # bills = Bill.objects.filter(billType = billType)
-        bills = bills.filter(billType = billType).order_by('-date', '-billId')
-    # else:
-    #     bills = bills
-        # bills = Bill.objects.all()
+    if billType != 'all': # fiter by bill type {gold, silver}
+        bills = bills.filter(billType = billType) #.order_by('-date', '-billId')
 
-    if(billStatus != 'all'): # fiter by bill status {submitted, draft}
-        bills = bills.filter(status = billStatus).order_by('-date', '-billId')
+    if billStatus != 'all': # fiter by bill status {submitted, draft}
+        bills = bills.filter(status = billStatus) #.order_by('-date', '-billId')
 
-    if(billDate is None):
-        bills = bills.order_by('-date', '-billId')
+    if billDate is None:
+        bills = bills #.order_by('-date', '-billId')
 
     result_page = paginator.paginate_queryset(bills, request)
 
@@ -277,8 +268,8 @@ def billsListSummmary(request):
 @api_view(['GET'])
 def getBillSummaryByCustomerInfo(request, searchValue):
     billType = request.GET.get('billType') # Query param
-    billStatus = request.GET.get('billStatus')
     billDate = request.GET.get('billDate')
+    billStatus = request.GET.get('billStatus')
     nowDate = datetime.datetime.now().date()
 
     paginator = PageNumberPagination()
@@ -289,7 +280,7 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     # getting search customer bills id
     for c in searchCustomer:
         #filter by customnerId
-        if(billType == 'all'):
+        if billType == 'all':
             searchedBills = list(Bill.objects.filter(customerId=c).values_list('billId', flat=True))
         #filter by billType {gold, silver} & customnerId
         else:
@@ -299,12 +290,12 @@ def getBillSummaryByCustomerInfo(request, searchValue):
 
     searchedBills = Bill.objects.filter(billId__in=billsIdList)
 
-    if(billDate is not None):
+    if billDate is not None:
         searchedBills = searchedBills.filter(date__range = [billDate, nowDate])
     else:
         searchedBills =searchedBills.all()
 
-    if(billStatus != 'all'): 
+    if billStatus != 'all': 
         #fiter by bill status {submitted, draft}
         searchedBills = searchedBills.filter(status = billStatus)
     else:
@@ -365,9 +356,9 @@ def generateBill(request):
 
     if(Customer.objects.filter(name= request.data['name']).exists()):
         oldCustomer = Customer.objects.get(name= request.data['name'])
-
         newBill = GenerateBillSerilizer(instance= oldCustomer, data= request.data)
     else:
+
         newBill = GenerateBillSerilizer(data= request.data)
 
     if newBill.is_valid():
@@ -375,7 +366,7 @@ def generateBill(request):
 
         return Response(newBill.data)
     else:
-        return Response(newBill.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(newBill._errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
