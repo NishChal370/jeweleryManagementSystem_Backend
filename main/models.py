@@ -24,6 +24,7 @@ class Order(models.Model):
     order_status = [
         ('pending','PENDING'),
         ('inprogress','INPROGRESS'),
+        ('completed', 'COMPLETED'),
         ('submitted','SUBMITTED'),
     ]
     order_type = [
@@ -38,8 +39,6 @@ class Order(models.Model):
     advanceAmount = models.FloatField(null=True, blank = True)
     submittionDate = models.DateField(null=False, blank = True)
     submittedDate = models.DateField(null=True, blank = True)
-    #design = models.ImageField( null=True, blank=True)
-    #status = models.TextField(null=True)
     remark = models.TextField(null=True, blank=True)
 
     customerProductWeight = models.FloatField(null=True, blank = True)
@@ -114,7 +113,7 @@ class OrderProduct(models.Model):
     order_status = [
         ('pending','PENDING'),
         ('inprogress','INPROGRESS'),
-        ('submitted','SUBMITTED'),
+        ('completed','COMPLETED'),
     ]
     orderProductId = models.AutoField(primary_key=True, null=False)
     orderId = models.ForeignKey(Order, null=True, on_delete=CASCADE, related_name='orderProducts')

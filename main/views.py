@@ -156,7 +156,7 @@ def getOrders(request):
 
 
 
-## GenerateOrderBill
+## GenerateOrderBill # not in use now
 @api_view(['POST'])
 def generateOrderBill(request):
     orderBill =  OrderBillSerilizer(data= request.data)
@@ -178,7 +178,7 @@ def orderListSummary(request):
     customerInfo = request.GET.get('customerInfo')
     
     paginator = PageNumberPagination()
-    paginator.page_size = 10
+    paginator.page_size = 21
     
     if customerInfo != None:
         searchedCustomer = Customer.objects.filter(Q(name__icontains=customerInfo) | Q(address__icontains=customerInfo) | Q(phone__icontains=customerInfo))
@@ -193,7 +193,8 @@ def orderListSummary(request):
         orders = Order.objects.all()
 
     if date != 'None':
-        orders = orders.filter(date__range = [date, datetime.datetime.now().date()])
+        # orders = orders.filter(submittionDate__range = [date, datetime.datetime.now().date()])
+        orders = orders.filter(submittionDate__gte = date).order_by('submittionDate')
 
     if type != 'all':
         orders = orders.filter(type= type)
@@ -237,7 +238,7 @@ def billsListSummmary(request):
     nowDate = datetime.datetime.now().date()
 
     paginator = PageNumberPagination()
-    paginator.page_size = 10
+    paginator.page_size = 21
     
     if billDate is not None:
         bills = Bill.objects.filter(date__range = [billDate, nowDate]) #.order_by('-date', '-billId')

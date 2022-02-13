@@ -48,8 +48,8 @@ class OrderProductSerilizer(serializers.ModelSerializer):
     product = ProductSerilizer(required=False, many=False, read_only=False, allow_null=True )
     class Meta:
         model = OrderProduct
-        # fields = ('orderProductId', 'orderId', 'productId', 'totalWeight', 'status', 'orderProduct')
         fields = ('orderProductId', 'orderId', 'totalWeight', 'status', 'design', 'quantity', 'product')
+
     def to_representation(self, instance): # it shows all the product insted of id
         rep = super().to_representation(instance)
         rep['product'] = ProductSerilizer(instance.productId).data
@@ -63,7 +63,6 @@ class OrderSerilizer(serializers.ModelSerializer):
     orderProducts = OrderProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model = Order
-        # fields = ('orderId', 'customerId', 'date', 'rate', 'advanceAmount', 'submittionDate', 'submittedDate', 'design', 'status', 'remark', 'orderProducts')
         fields = ('orderId', 'customerId', 'date', 'type', 'rate', 'customerProductWeight', 'advanceAmount', 'submittionDate', 'submittedDate', 'status', 'remark' ,'orderProducts')
 
 
@@ -114,6 +113,8 @@ class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
         searchData['date'] = rep['date']
         searchData['orderId'] = rep['orderId']
         searchData['billId'] = "-" if len(rep['orders'])<=0 else rep['orders'][0].get('billId')
+        searchData['billStatus'] = "" if len(rep['orders'])<=0 else rep['orders'][0].get('status')
+        searchData['billRemainingAmt'] = None if len(rep['orders'])<=0 else rep['orders'][0].get('remainingAmount')
         searchData['customerId'] = rep['customerId']
         searchData['customerName'] = customer['name']
         searchData['phone'] = customer['phone']
@@ -248,9 +249,9 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
     def create(self, validated_data):
         bills = validated_data.pop('bills')
 
-        if bill.get('orderId') != None:
-
-            Order.objects.filter(orderId = bill.get('orderId')).update(status = 'submitted', submittedDate = datetime.datetime.now())
+        if bills[0].get('status') == 'submitted':
+            if bills[0].get('orderId') != None:
+                Order.objects.filter(orderId = bills[0].get('orderId').orderId).update(status = 'submitted', submittedDate = datetime.datetime.now())
         #create customer
         customer = Customer.objects.create(**validated_data) 
 
@@ -271,8 +272,9 @@ class GenerateBillSerilizer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         bills = validated_data.pop('bills')
 
-        if bills[0].get('orderId') != None:
-            Order.objects.filter(orderId = bills[0].get('orderId').orderId).update(status = 'submitted')
+        if bills[0].get('status') == 'submitted':
+            if bills[0].get('orderId') != None:
+                Order.objects.filter(orderId = bills[0].get('orderId').orderId).update(status = 'submitted', submittedDate = datetime.datetime.now())
 
         for bill in bills :
             billProducts = bill.pop('billProduct')
@@ -340,8 +342,9 @@ class UpdateExistingBillSerilizer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         bill = validated_data.pop('bills')[0]
 
-        if bill.get('orderId') != None:
-            Order.objects.filter(orderId = bill.get('orderId').orderId).update(status = 'submitted', submittedDate = datetime.datetime.now())
+        if bill.get('status') == 'submitted':
+            if bill.get('orderId') != None:
+                Order.objects.filter(orderId = bill.get('orderId').orderId).update(status = 'submitted', submittedDate = datetime.datetime.now())
 
         Customer.objects.filter(customerId = instance.customerId).update(**validated_data)
 
@@ -354,12 +357,10 @@ class UpdateExistingBillSerilizer(serializers.ModelSerializer):
             product = billProduct.pop('product')
             #if new billProduct 
             if 'billProductId' not in billProduct.keys():
-                print("In")
-                print(product) 
                 newProduct = Product.objects.create(**product)
 
-                bill = Bill.objects.get(billId = bill.get('billId'))
-                BillProduct.objects.create(billId=bill, productId=newProduct, **billProduct)
+                updatingBill = Bill.objects.get(billId = bill.get('billId'))
+                BillProduct.objects.create(billId=updatingBill, productId=newProduct, **billProduct)
 
                 keep_ProductId_list.append(newProduct.productId)
             #if billProduct exists
@@ -424,7 +425,6 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
             newOrder = Order.objects.create(customerId=customer, **order)
 
             for orderProduct in orderProducts:
-                # product = orderProduct.pop('orderProduct')
                 product = orderProduct.pop('product')
                 #create product
                 newProduct = Product.objects.create(**product)
@@ -442,7 +442,6 @@ class PlaceOrderSerilizer(serializers.ModelSerializer):
             newOrder = Order.objects.create(customerId=instance, **order)
 
             for orderProduct in orderProducts:
-                # product = orderProduct.pop('orderProduct')
                 product = orderProduct.pop('product')
                 # add product for existing customer
                 newProduct = Product.objects.create(**product)
@@ -525,7 +524,7 @@ class UpdateOrderSerilizer(serializers.ModelSerializer):
 
 
 '''
-Create bill for order
+Create bill for order # not in use now
 '''
 class OrderBillSerilizer(serializers.ModelSerializer):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )

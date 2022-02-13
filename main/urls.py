@@ -21,7 +21,7 @@ urlpatterns = [
     # # path('order-place/', views.placeOrder, name='place-order'),
     path('order/update', views.orderUpdate, name='order-update'),
     path('place-order/', views.generateOrder, name='place-order'),
-    path('generate-order-bill/', views.generateOrderBill, name='generate-order-bill'),
+    path('generate-order-bill/', views.generateOrderBill, name='generate-order-bill'),# not in use now
 
 
     ## Bills
