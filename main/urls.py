@@ -44,4 +44,8 @@ urlpatterns = [
     path('rate-set/', views.setRate, name='rate-set'),
     path('rate/<str:date>', views.getRateByDate, name='rate-by-date'),
     path('rate-update/<int:pk>', views.updateTodaysRate, name='rate-update'),
+
+
+    #orderProduct
+    path('orderProduct/<int:pk>', views.orderProductsDetail, name='orderProduct-by-id'),
 ]

@@ -15,8 +15,8 @@ from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
-from main.models import BillProduct, Customer, Order, Bill, Product, Rate
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
+from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
 
 
 
@@ -215,6 +215,18 @@ def orderListSummary(request):
     return data
 
 
+##Get order by ID
+@api_view(['GET'])
+def orderProductsDetail(request, pk):
+    try:
+        orderProducts = OrderProduct.objects.get(orderProductId = pk)
+        serializer = OrderProductSerilizer(orderProducts, many=False)
+
+        return Response(serializer.data)
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+    
+    
 
 '''
     # Bills
