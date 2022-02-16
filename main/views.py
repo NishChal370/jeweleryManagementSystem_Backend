@@ -15,8 +15,8 @@ from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
-from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
+from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
 
 
 
@@ -482,6 +482,95 @@ def updateTodaysRate(request, pk):
 
 
 
+
+
+'''
+ # Staff
+'''
+
+#GET staff Detail
+@api_view(['GET'])
+def getStaffDetail(request):
+    staffs = Staff.objects.all()
+    serializer = StaffSerilizer(staffs, many=True)
+
+    return Response(serializer.data)
+
+
+
+#Register staff
+@api_view(['POST'])
+def registerStaff(request):
+    if(Staff.objects.filter(phone= request.data['phone']).exists()):
+        oldStaff = Staff.objects.get(phone= request.data['phone'])
+
+        newStaff = StaffSerilizer(instance=oldStaff, data=request.data)
+    else:
+        newStaff = StaffSerilizer(data= request.data)
+
+    if newStaff.is_valid():
+        newStaff.save()
+        #return all staff
+        allStaffs = Staff.objects.all()
+        serializer = StaffSerilizer(allStaffs, many=True)
+        return Response(serializer.data)
+    else:
+        return Response(newStaff.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+#delete bill by id
+@api_view(['DELETE'])
+def deleteStaffById(request, pk):
+    try:
+        staff = Staff.objects.get(staffId=pk)
+
+        staffSerilizer = StaffSerilizer(staff, many=False)
+
+        if staffSerilizer.data['inprogress'] <=0 :
+            staff.delete()
+
+            staff = Staff.objects.all()
+            staff = StaffSerilizer(staff, many=True)
+
+            return Response(staff.data)
+        else:
+            return Response({staffSerilizer.data['staffName']+" have work to complete"}, status=status.HTTP_428_PRECONDITION_REQUIRED)
+
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+
+
+#delete bill by id
+@api_view(['GET'])
+def getStaffbyId(request, pk):
+    try:
+        staff = Staff.objects.get(staffId=pk)
+
+        staffSerilizer = StaffSerilizer(staff, many=False)
+
+        return Response(staffSerilizer.data)
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+'''@api_view(['DELETE'])
+def deleteStaffById(request, pk):
+    try:
+        staff = Staff.objects.get(staffId=pk)
+        staff.delete()
+
+        staff = Staff.objects.all()
+
+        staff = StaffSerilizer(staff, many=True)
+
+        return Response(staff.data)
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+'''
 
 '''
 #######class base pagination

@@ -1,3 +1,4 @@
+from unicodedata import name
 from django.urls.conf import path
 
 from . import views
@@ -48,4 +49,12 @@ urlpatterns = [
 
     #orderProduct
     path('orderProduct/<int:pk>', views.orderProductsDetail, name='orderProduct-by-id'),
+
+
+    #Staff
+    path('staff/', views.getStaffDetail, name='staff-detail'),
+    path('staff/<int:pk>',views.getStaffbyId, name='staff-by-id'),
+    path('staff/register/', views.registerStaff, name='staff-register'),
+    path('staff/delete/<int:pk>', views.deleteStaffById, name='staff-delete-by-id'),
+
 ]

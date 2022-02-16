@@ -1,3 +1,5 @@
+from asyncio.windows_events import NULL
+import email
 from turtle import mode
 from django.db import models
 from django.db.models.base import Model
@@ -138,3 +140,40 @@ class Rate(models.Model):
 
     def __str__(self):
         return f'{self.rateId}'
+
+
+class Staff(models.Model):
+    staffId = models.AutoField(primary_key=True,null=False)
+    staffName = models.CharField(max_length=50, null=False)
+    address = models.CharField(max_length=50, null=False)
+    phone = models.CharField(max_length=10, null=True , blank=True)
+    email = models.EmailField(max_length=50, null=True, blank=True)
+    registrationDate = models.DateField(null=True, blank=True, default=datetime.date.today())
+    resignDate = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.staffId}'
+
+
+class StaffWork(models.Model):
+    work_status = [
+        ('inprogress','INPROGRESS'),
+        ('completed','COMPLETED'),
+    ]
+
+    staffWorkId = models.AutoField(primary_key=True,null=False)
+    staff = models.ForeignKey(Staff, null=False, on_delete=CASCADE, related_name='staffwork')
+    orderProduct = models.ForeignKey(OrderProduct, null=False, on_delete=CASCADE, related_name='orderProduct')
+    date = models.DateField(null=True, blank=True, default=datetime.date.today())
+    givenWeight = models.FloatField(null=False)
+    KDMWeight = models.FloatField(null=False)
+    totalWeight = models.FloatField(null=False)
+    submittionDate = models.DateField(null=True, blank=True)
+    submittedWeight = models.FloatField(null=True, blank=True)
+    finalProductWeight = models.FloatField(null=True, blank=True)
+    lossWeight = models.FloatField(null=True, blank=True)
+    submittedDate = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=11, null=False, choices=work_status, default='inprogress')
+
+    def __str__(self):
+        return f'{self.staffWorkId}'

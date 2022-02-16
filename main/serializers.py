@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate
+from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate, Staff, StaffWork
 
 
 '''
@@ -644,6 +644,43 @@ class BillProductInfoSerilizer(serializers.ModelSerializer):
     class Meta:
         model = BillProduct
         fields = ('billProductId', 'billId', 'productId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct')
+
+
+
+'''
+ # Staff work detail
+'''
+class StaffWorkSerilizer(serializers.ModelSerializer):
+    orderProduct = OrderProductSerilizer(required=False, many=False, read_only=False, allow_null=True)
+    class Meta:
+        model = StaffWork
+        fields = ('staffWorkId', 'staff', 'date', 'givenWeight', 'KDMWeight', 'totalWeight',  'submittionDate', 'submittedWeight', 'finalProductWeight', 'lossWeight', 'submittedDate', 'status', 'orderProduct')
+
+
+
+'''
+ # Staff detail
+'''
+class StaffSerilizer(serializers.ModelSerializer):
+    staffwork = StaffWorkSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    class Meta:
+        model = Staff
+        fields = ('staffId',  'staffName', 'address', 'phone', 'email', 'registrationDate', 'resignDate', 'staffwork')
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['totalWork'] = len(rep['staffwork'])
+        rep['completed'] = 0
+        rep['inprogress'] = 0
+        
+        for work in rep['staffwork']:
+            rep[work.get('status')] = rep[work.get('status')] + 1
+
+        del rep['staffwork']
+
+        return rep
+
+
 
 
 
