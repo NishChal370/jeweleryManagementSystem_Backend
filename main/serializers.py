@@ -650,7 +650,7 @@ class BillProductInfoSerilizer(serializers.ModelSerializer):
 '''
  # Staff work detail
 '''
-class StaffWorkSerilizer(serializers.ModelSerializer):
+class StaffWorkDetailSerilizer(serializers.ModelSerializer):
     orderProduct = OrderProductSerilizer(required=False, many=False, read_only=False, allow_null=True)
     class Meta:
         model = StaffWork
@@ -658,11 +658,29 @@ class StaffWorkSerilizer(serializers.ModelSerializer):
 
 
 
+class StaffAssignWorkSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = StaffWork
+        fields = ('staffWorkId', 'staff', 'date', 'givenWeight', 'KDMWeight', 'totalWeight',  'submittionDate', 'submittedWeight', 'finalProductWeight', 'lossWeight', 'submittedDate', 'status', 'orderProduct')
+
+    def create(self, validated_data):
+        orderProduct = OrderProductSerilizer(validated_data['orderProduct']).data
+
+        OrderProduct.objects.filter(orderProductId = orderProduct['orderProductId']).update(status = 'inprogress')
+
+        Order.objects.filter(orderId = orderProduct['orderId']).update(status = 'inprogress')
+
+        return super().create(validated_data)
+
+
+
+
+
 '''
  # Staff detail
 '''
 class StaffSerilizer(serializers.ModelSerializer):
-    staffwork = StaffWorkSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    staffwork = StaffWorkDetailSerilizer(required=False, many=True, read_only=False, allow_null=True)
     class Meta:
         model = Staff
         fields = ('staffId',  'staffName', 'address', 'phone', 'email', 'registrationDate', 'resignDate', 'staffwork')

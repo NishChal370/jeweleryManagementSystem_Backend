@@ -49,12 +49,15 @@ urlpatterns = [
 
     #orderProduct
     path('orderProduct/<int:pk>', views.orderProductsDetail, name='orderProduct-by-id'),
-
+    path('orderProduct/pending/<int:orderId>', views.pendingOrderProductDetail, name='pending-orderProduct'),
 
     #Staff
     path('staff/', views.getStaffDetail, name='staff-detail'),
     path('staff/<int:pk>',views.getStaffbyId, name='staff-by-id'),
     path('staff/register/', views.registerStaff, name='staff-register'),
+    path('staff/name/', views.getStaffNameList, name="staffs-name-list"),
+    path('staff/work/', views.getStaffWorkDetail, name='staff-work'),
+    path('staff/assign/work/',views.assignStaffWork, name='staff-work-assign'),
     path('staff/delete/<int:pk>', views.deleteStaffById, name='staff-delete-by-id'),
 
 ]

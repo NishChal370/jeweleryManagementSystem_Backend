@@ -15,8 +15,8 @@ from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
-from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
+from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
 
 
 
@@ -225,7 +225,23 @@ def orderProductsDetail(request, pk):
         return Response(serializer.data)
     except:
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
-    
+
+
+##Get pending order by ID
+@api_view(['GET'])
+def pendingOrderProductDetail(request,orderId):
+    try:
+        # orderProducts = Order.objects.get(orderProductId = pk)
+        # # orders = Order.objects.filter(status='pending').get(orderId=pk)
+        # # serializer = OrderSerilizer(orders, many=False)
+        orderProducts = OrderProduct.objects.filter(orderId = orderId).filter(status='pending')
+        serializer = OrderProductSerilizer(orderProducts, many=True)
+        if len(serializer.data) >0:
+            return Response(serializer.data)
+        else:
+            return Response({"Order  work is already assigned"}, status=status.HTTP_510_NOT_EXTENDED)
+    except:
+        return Response({"Not Found"}, status=status.HTTP_404_NOT_FOUND)
     
 
 '''
@@ -498,6 +514,19 @@ def getStaffDetail(request):
 
 
 
+#GET staffs name list
+@api_view(['GET'])
+def getStaffNameList(request):
+    staffs = Staff.objects.all().values('staffId', 'staffName')
+    if len(staffs)>0:
+        return Response(staffs)
+    else:
+        return Response({"No staff Registered"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
 #Register staff
 @api_view(['POST'])
 def registerStaff(request):
@@ -541,6 +570,7 @@ def deleteStaffById(request, pk):
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
+
 #delete bill by id
 @api_view(['GET'])
 def getStaffbyId(request, pk):
@@ -553,6 +583,36 @@ def getStaffbyId(request, pk):
     except:
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
+
+
+#GET staff work detail
+@api_view(['GET'])
+def getStaffWorkDetail(request):
+    staffWork = StaffWork.objects.all()
+    serilizer =StaffWorkDetailSerilizer(staffWork, many=True)
+
+    return Response(serilizer.data)
+
+
+
+#Assign work to staff
+@api_view(['POST'])
+def assignStaffWork(request):
+    workDetail = request.data
+
+    if workDetail['staffWorkId'] != None:
+        oldWork = StaffWork.objects.get(staffWorkId = workDetail['staffWorkId'])
+
+        newWork = StaffAssignWorkSerilizer(instance=oldWork, data=workDetail)
+    else:
+        newWork = StaffAssignWorkSerilizer(data= workDetail)
+
+    if newWork.is_valid():
+        newWork.save()
+        
+        return Response(newWork.data)
+    else:
+        return Response(newWork.error_messages, status=status.HTTP_404_NOT_FOUND)
 
 
 
