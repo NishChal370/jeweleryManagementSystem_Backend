@@ -548,7 +548,7 @@ def registerStaff(request):
 
 
 
-#delete bill by id
+#delete bill by id----------------
 @api_view(['DELETE'])
 def deleteStaffById(request, pk):
     try:
@@ -558,10 +558,9 @@ def deleteStaffById(request, pk):
 
         if staffSerilizer.data['inprogress'] <=0 :
             staff.delete()
-
+            # Staff.objects.filter(staffId=pk).update(resignDate = datetime.date.today())
             staff = Staff.objects.all()
             staff = StaffSerilizer(staff, many=True)
-
             return Response(staff.data)
         else:
             return Response({staffSerilizer.data['staffName']+" have work to complete"}, status=status.HTTP_428_PRECONDITION_REQUIRED)
@@ -588,7 +587,7 @@ def getStaffbyId(request, pk):
 #GET staff work detail
 @api_view(['GET'])
 def getStaffWorkDetail(request):
-    staffWork = StaffWork.objects.all()
+    staffWork = StaffWork.objects.all().order_by('-date', '-staffWorkId')
     serilizer =StaffWorkDetailSerilizer(staffWork, many=True)
 
     return Response(serilizer.data)

@@ -655,8 +655,34 @@ class StaffWorkDetailSerilizer(serializers.ModelSerializer):
     class Meta:
         model = StaffWork
         fields = ('staffWorkId', 'staff', 'date', 'givenWeight', 'KDMWeight', 'totalWeight',  'submittionDate', 'submittedWeight', 'finalProductWeight', 'lossWeight', 'submittedDate', 'status', 'orderProduct')
+    
+    def to_representation(self, instance):
+        staff = StaffSerilizer(instance.staff).data
+        del staff['totalWork']
+        del staff['completed']
+        del staff['inprogress']
+
+        rep = super().to_representation(instance)
+        rep['staff'] = staff
+
+        return rep
 
 
+'''
+ # Staff work
+'''
+class StaffWorkSerilizer(serializers.ModelSerializer):
+    orderProduct = OrderProductSerilizer(required=False, many=False, read_only=False, allow_null=True)
+    class Meta:
+        model = StaffWork
+        fields = ('staffWorkId', 'staff', 'date', 'givenWeight', 'KDMWeight', 'totalWeight',  'submittionDate', 'submittedWeight', 'finalProductWeight', 'lossWeight', 'submittedDate', 'status', 'orderProduct')
+    
+
+
+
+'''
+ # Staff work Assign
+'''
 
 class StaffAssignWorkSerilizer(serializers.ModelSerializer):
     class Meta:
@@ -671,6 +697,24 @@ class StaffAssignWorkSerilizer(serializers.ModelSerializer):
         Order.objects.filter(orderId = orderProduct['orderId']).update(status = 'inprogress')
 
         return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        validated_data['status'] = 'completed'
+        orderProducts = OrderProduct.objects.filter(orderId= validated_data['orderProduct'].orderId)
+
+        if(validated_data['submittedDate'] is not None):
+            updatedorderProduct = OrderProduct.objects.filter(orderProductId = validated_data['orderProduct'].orderProductId).update(status='completed')
+        
+            productStatus = []
+            for orderProduct in orderProducts:
+                print(orderProduct.status)
+                productStatus.append(orderProduct.status)
+
+            if('pending' not in productStatus) and ('inprogress' not in productStatus):
+                order = Order.objects.filter(orderId = orderProduct.orderId.orderId).update(status='completed')
+
+
+        return super().update(instance, validated_data)
 
 
 
@@ -680,7 +724,7 @@ class StaffAssignWorkSerilizer(serializers.ModelSerializer):
  # Staff detail
 '''
 class StaffSerilizer(serializers.ModelSerializer):
-    staffwork = StaffWorkDetailSerilizer(required=False, many=True, read_only=False, allow_null=True)
+    staffwork = StaffWorkSerilizer(required=False, many=True, read_only=False, allow_null=True)
     class Meta:
         model = Staff
         fields = ('staffId',  'staffName', 'address', 'phone', 'email', 'registrationDate', 'resignDate', 'staffwork')
