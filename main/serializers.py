@@ -662,8 +662,11 @@ class StaffWorkDetailSerilizer(serializers.ModelSerializer):
         del staff['completed']
         del staff['inprogress']
 
+        order = OrderSerilizer(instance.orderProduct.orderId).data
+
         rep = super().to_representation(instance)
         rep['staff'] = staff
+        rep['type'] = order['type']
 
         return rep
 

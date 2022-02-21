@@ -587,7 +587,41 @@ def getStaffbyId(request, pk):
 #GET staff work detail
 @api_view(['GET'])
 def getStaffWorkDetail(request):
-    staffWork = StaffWork.objects.all().order_by('-date', '-staffWorkId')
+    type = request.GET.get('type') # Query param
+    orderId = request.GET.get('orderId')
+    staffInfo = request.GET.get('staffInfo')
+    workStatus = request.GET.get('workStatus')
+    submittionDate = request.GET.get('submittionDate')
+
+    if submittionDate != '':
+
+        staffWork = StaffWork.objects.filter(submittionDate__gte = submittionDate).order_by('submittionDate').all()
+    else:
+        staffWork = StaffWork.objects.all()
+    
+    if staffInfo != '': #
+        print("In")
+        searchedStaff = Staff.objects.filter(Q(staffName__icontains=staffInfo) |  Q(phone__icontains=staffInfo))
+        staffWork = staffWork.filter(staff__in = searchedStaff).all()
+
+    if orderId != '':
+        searchedOrder = Order.objects.get(orderId=orderId)
+        orderProduct = OrderProduct.objects.filter(orderId=searchedOrder).all()
+
+        staffWork = staffWork.filter(orderProduct__in = orderProduct).all()
+    
+    if workStatus != '':
+        staffWork = staffWork.filter(status = workStatus).all()
+    
+    if type != '':
+        searchedOrder = Order.objects.filter(type=type)
+        orderProduct = OrderProduct.objects.filter(orderId__in =searchedOrder).all()
+
+        staffWork = staffWork.filter(orderProduct__in = orderProduct).all()
+
+    if submittionDate == '':   
+        staffWork = staffWork.order_by('-date', '-staffWorkId')
+
     serilizer =StaffWorkDetailSerilizer(staffWork, many=True)
 
     return Response(serilizer.data)
