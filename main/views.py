@@ -3,7 +3,7 @@ from ast import Return
 from itertools import product
 from math import e
 from sqlite3 import Date
-import datetime
+# import datetime
 from traceback import print_tb
 from django.utils.timezone import now
 from webbrowser import get
@@ -18,7 +18,9 @@ from rest_framework.pagination import PageNumberPagination
 from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork
 from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
 
-
+from django.utils import timezone
+import calendar
+from datetime import date, datetime, timedelta
 
 ##Create your views here.
 def index(response):
@@ -215,6 +217,7 @@ def orderListSummary(request):
     return data
 
 
+
 ##Get order by ID
 @api_view(['GET'])
 def orderProductsDetail(request, pk):
@@ -263,7 +266,8 @@ def billsListSummmary(request):
     billType = request.GET.get('billType') # Query param
     billDate = request.GET.get('billDate')
     billStatus = request.GET.get('billStatus')
-    nowDate = datetime.datetime.now().date()
+    # nowDate = datetime.datetime.now().date()
+    nowDate = datetime.now().date()
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
@@ -299,7 +303,7 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     billType = request.GET.get('billType') # Query param
     billDate = request.GET.get('billDate')
     billStatus = request.GET.get('billStatus')
-    nowDate = datetime.datetime.now().date()
+    nowDate = datetime.now().date()
 
     paginator = PageNumberPagination()
     paginator.page_size = 10
@@ -442,9 +446,11 @@ def getAllRates(request):
 ## set rate
 @api_view(['POST'])
 def setRate(request):
-    existingRate = Rate.objects.filter(date= datetime.datetime.now())
+    existingRate = Rate.objects.filter(date= datetime.now())
+    # existingRate = Rate.objects.filter(date= datetime.datetime.now())
     if(existingRate.exists()):
-        oldRate = Rate.objects.get(date= datetime.datetime.now())
+        # oldRate = Rate.objects.get(date= datetime.datetime.now())
+        oldRate = Rate.objects.get(date= datetime.now())
         newRate = RateSerilizer(instance= oldRate, data= request.data)
     else:
         newRate = RateSerilizer(data= request.data)
@@ -499,6 +505,112 @@ def updateTodaysRate(request, pk):
 
 
 
+## GET Rate report
+@api_view(['GET'])
+def getRateReport(request):
+    reportType = request.GET.get('type')
+    print(reportType)
+    rates = Rate.objects.all()
+
+    if reportType == 'weekly':
+        todays_day_index =timezone.now().isoweekday()
+        week_start_date = datetime.today() - timedelta(days=todays_day_index)- timedelta(days=7)
+        week_end_date = week_start_date + timedelta(days=6)
+
+        rates = Rate.objects.filter(date__range=[week_start_date, week_end_date])
+
+        rateWeeklyRateList=[]
+        serializer = RateSerilizer(rates, many=True).data
+        for data in serializer:
+            rateWeeklyRateList.append({"index":data['date'], 'hallmarkRate' :(data['hallmarkRate'])/1000, 'tajabiRate' :(data['tajabiRate'])/1000, 'silverRate': (data['silverRate'])/100})
+        
+        return Response(rateWeeklyRateList)
+
+    elif reportType == 'monthly':
+        weekCount = 0
+        rateWeeklyRateList= []
+        for week in getWeekStartAndEndDate():
+            weekCount += 1
+
+            if len(week)>1:
+                serilizer = RateSerilizer(Rate.objects.filter(date__range=[week[0], week[1]]), many=True).data
+            else:
+                serilizer = RateSerilizer(Rate.objects.filter(date=week[0]), many=True)
+
+            if serilizer != []:
+                tajabiRateTotal = 0.0
+                silverRateTotal = 0.0
+                hallmarkRateTotal =0.0
+                for data in serilizer:
+                    tajabiRateTotal += data['tajabiRate']
+                    silverRateTotal += data['silverRate']
+                    hallmarkRateTotal += data['hallmarkRate']
+
+                rateWeeklyRateList.append({"index":'week '+str(weekCount), 'avgHallmarkRate' :(hallmarkRateTotal/len(serilizer))/1000, 'avgTajabiRate' :(tajabiRateTotal/len(serilizer))/1000, 'avgSilverRate': (silverRateTotal/len(serilizer))/100})
+
+        return Response(rateWeeklyRateList)
+
+    elif reportType == 'yearly':
+        month = 0
+        monthList = []
+        while month < 12:
+            month += 1
+            month_start_date = datetime.now().replace(month=month, day=1).date()
+            month_last_day = calendar.monthrange(month_start_date.year, month_start_date.month)[1]
+            
+            month_end_date = datetime.now().replace(month=month,day=month_last_day).date()
+
+            monthList.append([month_start_date, month_end_date])
+        
+        rateYearlyRateList= []
+        for month in monthList:
+            serilizer = RateSerilizer(Rate.objects.filter(date__range=[month[0], month[1]]), many=True).data
+
+            if serilizer != []:
+                tajabiRateTotal = 0.0
+                silverRateTotal = 0.0
+                hallmarkRateTotal =0.0
+                for data in serilizer:
+                    tajabiRateTotal += data['tajabiRate']
+                    silverRateTotal += data['silverRate']
+                    hallmarkRateTotal += data['hallmarkRate']
+
+                rateYearlyRateList.append({"index":month[0].strftime("%B"), 'avgHallmarkRate' :(hallmarkRateTotal/len(serilizer))/1000, 'avgTajabiRate' :(tajabiRateTotal/len(serilizer))/1000, 'avgSilverRate': (silverRateTotal/len(serilizer))/100})
+                
+        return Response(rateYearlyRateList)
+        
+    
+    
+
+
+def getWeekStartAndEndDate():
+    month_first_date = datetime.today().replace(day=1).date()
+    month_last_day = calendar.monthrange(month_first_date.year, month_first_date.month)[1]
+    month_last_date = datetime.today().replace(day=month_last_day).date() 
+
+    tempList =[]
+    weekDayList =[]
+    tempDate = month_first_date
+    while tempDate.month == month_first_date.month:
+        tempList.append(tempDate)
+        if tempDate.weekday() == 5:
+            day = 1
+
+            weekDayList.append(tempList)
+            tempList =[]
+        elif tempDate.weekday() == 6:
+            day =6
+        else:
+            day = 5-tempDate.weekday()# int value range: 0-6, monday-sunday
+
+        tempDate = tempDate + timedelta(days= day)
+
+    tempList.append(month_last_date)
+    weekDayList.append(tempList)
+    tempList =[]
+
+    return weekDayList
+            
 
 '''
  # Staff
@@ -593,6 +705,9 @@ def getStaffWorkDetail(request):
     workStatus = request.GET.get('workStatus')
     submittionDate = request.GET.get('submittionDate')
 
+    paginator = PageNumberPagination()
+    paginator.page_size = 5
+
     if submittionDate != '':
 
         staffWork = StaffWork.objects.filter(submittionDate__gte = submittionDate).order_by('submittionDate').all()
@@ -622,9 +737,14 @@ def getStaffWorkDetail(request):
     if submittionDate == '':   
         staffWork = staffWork.order_by('-date', '-staffWorkId')
 
-    serilizer =StaffWorkDetailSerilizer(staffWork, many=True)
+    result_page = paginator.paginate_queryset(staffWork, request)
+    serilizer =StaffWorkDetailSerilizer(result_page, many=True)
 
-    return Response(serilizer.data)
+    data = paginator.get_paginated_response(serilizer.data) # current page with total page
+    data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
+
+    return data
+
 
 
 
