@@ -373,6 +373,8 @@ def deleteBillById(request, pk):
     except:
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
+
+
 ##Get all products
 @api_view(['GET'])
 def productList(request):
@@ -403,6 +405,8 @@ def generateBill(request):
 
 
 
+
+#Update Bill
 @api_view(['POST']) 
 def billUpdate(request):
     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
@@ -425,6 +429,47 @@ def getBills(request):
 
     return Response(serializer.data)
 
+
+import csv
+@api_view(['GET'])
+def getIncrementReport(request):
+    this_month_first_date = datetime.today().replace(day=1).date()
+    this_month_last_day = calendar.monthrange(this_month_first_date.year, this_month_first_date.month)[1]
+    this_month_last_date = datetime.today().replace(day=this_month_last_day).date() 
+
+    previous_month_first_date = datetime.today().replace(month=this_month_first_date.month-1, day=1).date()
+    previous_month_last_day = calendar.monthrange(previous_month_first_date.year, previous_month_first_date.month)[1]
+    previous_month_last_date = datetime.today().replace(month=this_month_first_date.month-1, day=previous_month_last_day).date() 
+    #bill
+    this_month_bills = Bill.objects.filter(date__range=[this_month_first_date, this_month_last_date]).all()
+    previous_month_bills = Bill.objects.filter(date__range=[previous_month_first_date, previous_month_last_date]).all()
+
+    this_month_total_bill = len(this_month_bills)
+    previous_month_total_bill = len(previous_month_bills)
+
+    bill_increment_percent = ((this_month_total_bill-previous_month_total_bill)/(this_month_total_bill+previous_month_total_bill))*100
+    #order
+    this_month_orders = Order.objects.filter(date__range=[this_month_first_date, this_month_last_date]).all()
+    previous_month_orders = Order.objects.filter(date__range=[previous_month_first_date, previous_month_last_date]).all()
+
+    this_month_total_order = len(this_month_orders)
+    previous_month_total_order = len(previous_month_orders)
+
+    order_increment_percent = ((this_month_total_order-previous_month_total_order)/(this_month_total_order+previous_month_total_order))*100
+    #order
+    this_month_staffworks = StaffWork.objects.filter(date__range=[this_month_first_date, this_month_last_date]).all()
+    previous_month_staffworks = StaffWork.objects.filter(date__range=[previous_month_first_date, previous_month_last_date]).all()
+
+    this_month_total_staffwork = len(this_month_staffworks)
+    previous_month_total_staffwork = len(previous_month_staffworks)
+
+    staffwork_increment_percent = ((this_month_total_staffwork-previous_month_total_staffwork)/(this_month_total_staffwork+previous_month_total_staffwork))*100
+    
+    report={ 'bill':{'total':this_month_total_bill, 'increment':str(bill_increment_percent)+'%'}, 
+            'order':{'total':this_month_total_order, 'increment':str(order_increment_percent)+'%'},
+            'staffWork':{'total':this_month_total_staffwork, 'increment':str(staffwork_increment_percent)+'%'},}
+
+    return Response(report)
 
 
 '''

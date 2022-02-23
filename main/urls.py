@@ -34,7 +34,10 @@ urlpatterns = [
     path('generate-bill/', views.generateBill, name='generate-bill'),
     path('bills/summary/', views.billsListSummmary, name='bill-list-summmary'), 
     path('bill/delete/<int:pk>', views.deleteBillById, name='bill-delete-by-id'),
-    path('bills/summary/<str:searchValue>/', views.getBillSummaryByCustomerInfo, name='bill-list-summmary-name'), 
+    path('bills/summary/<str:searchValue>/', views.getBillSummaryByCustomerInfo, name='bill-list-summmary-name'),
+
+    
+    path('bill-order-staffwork/increment/report/', views.getIncrementReport, name='count-bill-order-staffwork') ,
     
 
     #Products
