@@ -769,6 +769,24 @@ def assignStaffWork(request):
 
 
 
+'''
+ #Customer
+'''
+@api_view(['GET'])
+def getCustomerReport(request):
+    customers = Customer.objects.all()
+
+    addressDetail= {}
+    for customer in customers:
+        if customer.address.lower() in addressDetail:
+            addressDetail[customer.address.lower()] += 1
+        else:
+            addressDetail[customer.address.lower()] = 1
+
+    return Response(addressDetail)
+
+
+
 
 '''@api_view(['DELETE'])
 def deleteStaffById(request, pk):

@@ -12,6 +12,7 @@ urlpatterns = [
     #Customer
     path('customers/', views.customerList, name='customers-list'),
     path('customer/<int:pk>', views.customerById, name='customer-by-id'),
+    path('customer/report/', views.getCustomerReport, name='customer-report'),
     
     
     ## Orders
