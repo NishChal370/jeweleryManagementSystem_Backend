@@ -36,7 +36,7 @@ urlpatterns = [
     path('bill/delete/<int:pk>', views.deleteBillById, name='bill-delete-by-id'),
     path('bills/summary/<str:searchValue>/', views.getBillSummaryByCustomerInfo, name='bill-list-summmary-name'),
 
-    
+    path('bill-product/monthly/report/', views.getMonthlyBillProductReport, name='bill-product-monthly-report'),
     path('bill-order-staffwork/increment/report/', views.getIncrementReport, name='count-bill-order-staffwork') ,
     
 

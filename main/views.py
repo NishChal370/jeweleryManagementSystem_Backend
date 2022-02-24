@@ -430,7 +430,36 @@ def getBills(request):
     return Response(serializer.data)
 
 
-import csv
+
+#Get monthly billproduct report
+@api_view(['GET'])
+def getMonthlyBillProductReport(request):
+    month_start_date = request.GET.get('date')
+
+    weekNumber = 0
+    final_report = []
+    selected_date = datetime.strptime(month_start_date, "%Y-%m-%d")
+    
+    for week in getWeekStartAndEndDate(selected_date):
+        weekNumber +=1
+        weekly_bills = Bill.objects.filter(date__range=[week[0], week[1]]).all()
+        products_Id = BillProduct.objects.filter(billId__in= weekly_bills).values_list('productId', flat=True)
+
+        products_name = Product.objects.filter(productId__in = products_Id).values_list('productName', flat=True)
+
+        report ={'week': 'week'+str(weekNumber)}
+        for product_name in products_name:
+            if product_name.lower() in report :
+                report[product_name.lower()] += 1
+            else:
+                report[product_name.lower()] = 1
+
+        final_report.append(report)
+
+    return Response(final_report)
+
+
+# bill, order, staffwork total and increment of this month Report
 @api_view(['GET'])
 def getIncrementReport(request):
     this_month_first_date = datetime.today().replace(day=1).date()
@@ -574,7 +603,7 @@ def getRateReport(request):
     elif reportType == 'monthly':
         weekCount = 0
         rateWeeklyRateList= []
-        for week in getWeekStartAndEndDate():
+        for week in getWeekStartAndEndDate(datetime.today()):
             weekCount += 1
 
             if len(week)>1:
@@ -628,10 +657,10 @@ def getRateReport(request):
     
 
 
-def getWeekStartAndEndDate():
-    month_first_date = datetime.today().replace(day=1).date()
+def getWeekStartAndEndDate(date):
+    month_first_date = date.replace(day=1).date()
     month_last_day = calendar.monthrange(month_first_date.year, month_first_date.month)[1]
-    month_last_date = datetime.today().replace(day=month_last_day).date() 
+    month_last_date = date.replace(day=month_last_day).date() 
 
     tempList =[]
     weekDayList =[]
