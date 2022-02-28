@@ -442,7 +442,11 @@ def getMonthlyBillProductReport(request):
     
     for week in getWeekStartAndEndDate(selected_date):
         weekNumber +=1
-        weekly_bills = Bill.objects.filter(date__range=[week[0], week[1]]).all()
+        if len(week)>1:
+            weekly_bills = Bill.objects.filter(date__range=[week[0], week[1]]).all()
+        else:
+            weekly_bills = Bill.objects.filter(date=week[0]).all()
+
         products_Id = BillProduct.objects.filter(billId__in= weekly_bills).values_list('productId', flat=True)
 
         products_name = Product.objects.filter(productId__in = products_Id).values_list('productName', flat=True)
@@ -457,6 +461,49 @@ def getMonthlyBillProductReport(request):
         final_report.append(report)
 
     return Response(final_report)
+
+
+
+@api_view(['GET'])
+def getSalesReport(request):
+    week_number = 0
+    selected_date = datetime.strptime(request.GET.get('date') , "%Y-%m-%d")
+    final_report=[]
+    print(getWeekStartAndEndDate(selected_date))
+    for week in getWeekStartAndEndDate(selected_date):
+        week_number += 1
+        if week[0]<date.today():
+            if len(week)>1:
+                weekly_bills = Bill.objects.filter(date__range=[week[0], week[1]]).all()
+            else:
+                weekly_bills = Bill.objects.filter(date=week[0]).all()
+
+            weekly_due_bills = weekly_bills.filter(remainingAmount__gt =0).all()
+            weekly_payed_bills = weekly_bills.filter(remainingAmount__lte =0).all()
+            
+            due_amount = 0
+            payed_amount = 0
+            total_amount = 0
+            for bill in weekly_due_bills:
+                due_amount += bill.remainingAmount
+            for bill in weekly_payed_bills:
+                payed_amount += bill.payedAmount
+            for bill in weekly_bills:
+                total_amount += bill.grandTotalAmount
+
+            report={'week' :'week '+str(week_number),'report' :{'total amount' :total_amount,'due amount' :due_amount, 'payed amount': payed_amount}}
+            # report = {'total amount' :total_amount,'due amount' :due_amount, 'payed amount': payed_amount}
+            final_report.append(report)
+    
+    labels = []
+    datas={'total amount' :[], 'payed amount' :[], 'due amount' :[],}
+    for report in final_report:
+        labels.append(report['week'])
+        datas['due amount'].append(report['report']['due amount'])
+        datas['total amount'].append(report['report']['total amount'])
+        datas['payed amount'].append(report['report']['payed amount'])
+
+    return Response({'labels':labels, 'report': datas})
 
 
 # bill, order, staffwork total and increment of this month Report
@@ -583,21 +630,26 @@ def updateTodaysRate(request, pk):
 @api_view(['GET'])
 def getRateReport(request):
     reportType = request.GET.get('type')
-    print(reportType)
+    # dayIndex = {6:0, 0:1, 1:2, 2:3, 3:4, 4:5, 5:6}
     rates = Rate.objects.all()
 
     if reportType == 'weekly':
-        todays_day_index =timezone.now().isoweekday()
-        week_start_date = datetime.today() - timedelta(days=todays_day_index)- timedelta(days=7)
+        todays_day_index =datetime.today().isoweekday()
+        print("INSIODE")
+        print(todays_day_index)
+        # print(dayIndex[todays_day_index])
+        week_start_date = datetime.today() - timedelta(days= todays_day_index) if todays_day_index != 7 else datetime.today()
+        # week_start_date = datetime.today() - timedelta(days= dayIndex[todays_day_index])
         week_end_date = week_start_date + timedelta(days=6)
-
+        print(week_start_date)
+        print(week_end_date)
         rates = Rate.objects.filter(date__range=[week_start_date, week_end_date])
 
         rateWeeklyRateList=[]
         serializer = RateSerilizer(rates, many=True).data
         for data in serializer:
             rateWeeklyRateList.append({"index":data['date'], 'hallmarkRate' :(data['hallmarkRate'])/1000, 'tajabiRate' :(data['tajabiRate'])/1000, 'silverRate': (data['silverRate'])/100})
-        
+        print(rateWeeklyRateList)
         return Response(rateWeeklyRateList)
 
     elif reportType == 'monthly':
@@ -661,7 +713,6 @@ def getWeekStartAndEndDate(date):
     month_first_date = date.replace(day=1).date()
     month_last_day = calendar.monthrange(month_first_date.year, month_first_date.month)[1]
     month_last_date = date.replace(day=month_last_day).date() 
-
     tempList =[]
     weekDayList =[]
     tempDate = month_first_date
@@ -680,6 +731,9 @@ def getWeekStartAndEndDate(date):
         tempDate = tempDate + timedelta(days= day)
 
     tempList.append(month_last_date)
+    print("->")
+    print(tempList)
+    print("<-")
     weekDayList.append(tempList)
     tempList =[]
 
