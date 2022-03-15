@@ -5,6 +5,7 @@ from math import e
 from sqlite3 import Date
 # import datetime
 from traceback import print_tb
+from unicodedata import name
 from django.utils.timezone import now
 from webbrowser import get
 from threading import main_thread
@@ -13,18 +14,130 @@ from django.db.models import Q
 from django.http.response import HttpResponse
 from rest_framework.response import Response
 from rest_framework import serializers, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,  permission_classes
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.pagination import PageNumberPagination
+# from django.core.mail import send_mail
 from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer
+from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer, send_Email
 
 from django.utils import timezone
 import calendar
 from datetime import date, datetime, timedelta
 
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+# # import json
+
+# # from django.http import JsonResponse
+# # from django.views.decorators.http import require_POST
+
+# # @require_POST
+# # def login_view(request):
+# #     data = json.loads(request.body)
+# #     username = data.get('username')
+# #     password = data.get('password')
+
+# #     if username is None or password is None:
+# #         return JsonResponse({'detail': 'Please provide username and password.'}, status=400)
+
+# #     user = authenticate(username=username, password=password)
+
+# #     if user is None:
+# #         return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
+
+# #     login(request, user)
+# #     return JsonResponse({'detail': 'Successfully logged in.'})
+
+
+# # def logout_view(request):
+# #     if not request.user.is_authenticated:
+# #         return JsonResponse({'detail': 'You\'re not logged in.'}, status=400)
+
+# #     logout(request)
+# #     return JsonResponse({'detail': 'Successfully logged out.'})
+
+
+# # @ensure_csrf_cookie
+# # def session_view(request):
+# #     if not request.user.is_authenticated:
+# #         return JsonResponse({'isAuthenticated': False})
+
+# #     return JsonResponse({'isAuthenticated': True})
+
+
+# # def whoami_view(request):
+# #     if not request.user.is_authenticated:
+# #         return JsonResponse({'isAuthenticated': False})
+
+# #     return JsonResponse({'username': request.user.username})
+
+
+
+
 ##Create your views here.
 def index(response):
     return HttpResponse("Hello from API")
+
+
+
+@api_view(['POST'])
+@csrf_exempt
+@ensure_csrf_cookie
+@permission_classes((AllowAny,))
+def loginAdmin(request):
+    print("CALLED-----------------------------------------------------------")
+    # try:
+        # username = request.headers['username']
+        # password = request.headers['password']
+    admin = authenticate(request, username='admin', password='admin')
+    if admin is not None:
+        login(request, admin)
+        print("*********************************************************")
+        print(request.headers)
+        # send_Email('nishchal.370@gmail.com')
+        return Response({'message':"Welcome",'is_active':True})
+        # return Response({admin})
+    else:
+        print("Here")
+        return Response({'message':"Invalid Request", 'is_active':False})
+    # except:
+    #     print("Here2")
+    #     return Response({'message':"Invalid Request", 'is_active':False})
+
+
+
+
+@api_view(['POST'])
+def logoutAdmin(request):
+    logout(request)
+    return Response({'message':"See you", 'is_active':False})
+
+from django.middleware.csrf import get_token
+
+
+@ensure_csrf_cookie
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def getCsrfToken(request):
+    response = Response({'detail': 'CSRF cookie set'})
+    response['X-CSRFToken'] = get_token(request)
+    return response
+
+@api_view(['GET'])
+@ensure_csrf_cookie
+def session_view(request):
+    if not request.user.is_authenticated:
+        return Response({'isAuthenticated': False})
+
+    return Response({'isAuthenticated': True})
+
+
+
+
+
 
 
 '''
@@ -464,12 +577,13 @@ def getMonthlyBillProductReport(request):
 
 
 
+
 @api_view(['GET'])
 def getSalesReport(request):
     week_number = 0
     selected_date = datetime.strptime(request.GET.get('date') , "%Y-%m-%d")
     final_report=[]
-    print(getWeekStartAndEndDate(selected_date))
+    
     for week in getWeekStartAndEndDate(selected_date):
         week_number += 1
         if week[0]<date.today():
@@ -541,9 +655,9 @@ def getIncrementReport(request):
 
     staffwork_increment_percent = ((this_month_total_staffwork-previous_month_total_staffwork)/(this_month_total_staffwork+previous_month_total_staffwork))*100
     
-    report={ 'bill':{'total':this_month_total_bill, 'increment':str(bill_increment_percent)+'%'}, 
-            'order':{'total':this_month_total_order, 'increment':str(order_increment_percent)+'%'},
-            'staffWork':{'total':this_month_total_staffwork, 'increment':str(staffwork_increment_percent)+'%'},}
+    report={ 'bill':{'total':this_month_total_bill, 'increment':str(int(round(bill_increment_percent)))+'%'}, 
+            'order':{'total':this_month_total_order, 'increment':str(int(round(order_increment_percent)))+'%'},
+            'staffWork':{'total':this_month_total_staffwork, 'increment':str(int(round(staffwork_increment_percent)))+'%'},}
 
     return Response(report)
 
@@ -912,7 +1026,6 @@ def getCustomerReport(request):
             addressDetail[customer.address.lower()] = 1
 
     return Response(addressDetail)
-
 
 
 

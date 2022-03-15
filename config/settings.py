@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+from distutils.command.config import config
 import os
 from pathlib import Path
 from posixpath import join
@@ -68,7 +69,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS':  [], #[BASE_DIR.joinpath('frontend')],  # new
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -83,6 +84,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# # STATICFILES_DIRS = (
+# #     BASE_DIR.joinpath('frontend', 'build', 'static'),  # new
+# # )
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -148,11 +152,146 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
 
+    'http://127.0.0.1:3000',
     "http://localhost:3000",
 
 ]
 
 
-#STATIC_URL = '/static/'
+
+
+# # # # CORS_ALLOW_CREDENTIALS = True
+
+
+# # # # # change to https://app.example.com in production settings
+# # # CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
+
+
+
+
+# # # CORS_EXPOSE_HEADERS = ['Content-Type', 'Cookie']
+
+# # # CSRF_TRUSTED_ORIGINS = ['http://localhost:3000',]
+# # # CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+# # # CORS_ALLOW_CREDENTIALS = True
+
+# # # CSRF_COOKIE_SAMESITE = 'Lax' #Lax allows us to send CSRF cookies in external requests.
+# # # SESSION_COOKIE_SAMESITE = 'Lax'
+# # # CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
+# # # SESSION_COOKIE_HTTPONLY = False
+
+
+# REST_FRAMEWORK={
+#     'DEFAULT_AUTHENTICATION_CLASSES':[
+#         'rest_framework.authentication.SessionAuthentication'
+#     ],
+#     'DEFAULT_PERMISSION_CLASSES':[
+#         'rest_framework.permissions.IsAuthenticated'
+#     ]
+# }
+
+#STATIC_URL = '/static/' #IsAdminUser'
 #MEDIA_ROOT = BASE_DIR/'uploads'
 #MEDIA_URL = '/images/'
+
+
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = False
+
+# PROD ONLY
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+
+CORS_ORINGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
+
+
+# CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+
+# CSRF_COOKIE_NAME = 'X-CSRFTOKEN'
+
+# CORS_ALLOW_HEADERS = [
+#     'X-CSRFTOKEN',
+#     'csrftoken',
+#     'X-XSRF-TOKEN',
+#     'content-type',
+#     'x-requested-with',
+#     'Authorization',
+#     'Set-Cookie'
+# ]
+
+
+# # CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+
+# # CSRF_COOKIE_DOMAIN = 'http://192.168.56.1:3000' 
+
+# # CSRF_COOKIE_PATH = 'http://localhost:3000'
+
+# # SESSION_COOKIE_DOMAIN = 'http://localhost:3000'
+
+
+
+
+# CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+
+# CSRF_COOKIE_NAME = 'X-CSRFTOKEN'
+
+# CORS_ALLOW_HEADERS = [
+#     'X-CSRFTOKEN',
+#     'csrftoken',
+#     'X-XSRF-TOKEN',
+#     'content-type',
+#     'x-requested-with',
+#     'Authorization',
+#     'Set-Cookie'
+# ]
+
+# CORS_ALLOW_CREDENTIALS = True
+
+# CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+
+# CSRF_COOKIE_DOMAIN = 'http://192.168.56.1:3000' 
+
+# CSRF_COOKIE_PATH = 'http://localhost:3000'
+
+# SESSION_COOKIE_DOMAIN = 'http://localhost:3000'
+
+
+
+
+
+
+# CSRF_COOKIE_SAMESITE = 'Strict'
+# SESSION_COOKIE_SAMESITE = 'Strict'
+# CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
+# SESSION_COOKIE_HTTPONLY = False
+import json
+
+with open('mail.json','r') as input_file:
+    email_data = json.load(input_file)
+    email = email_data['EMAIL']
+    password = email_data['PASSWORD']
+    port = email_data['PORT']
+    
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# DEFAULT_FROM_EMAIL = email
+# EMAIL_HOST_USER = email
+# EMAIL_HOST_PASSWORD = password
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = port
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+DEFAULT_FROM_EMAIL = email
+EMAIL_HOST_USER = email
+EMAIL_HOST_PASSWORD = password
+EMAIL_USE_TLS = True
+EMAIL_PORT = port

@@ -4,8 +4,26 @@ from django.urls.conf import path
 from . import views
 
 
+
 urlpatterns = [
     path('', views.index, name='index'),
+
+    path('login/', views.loginAdmin, name='login-admin'),
+    path('logout/', views.logoutAdmin, name='logout-admin'),
+    path('token/', views.getCsrfToken, name='tokenn-n'),
+    path('session/', views.session_view, name='session'),
+
+
+    # path('login/', views.login_view, name='api-login'),
+    # path('logout/', views.logout_view, name='api-logout'),
+    # path('session/', views.session_view, name='api-session'),
+    # path('whoami/', views.whoami_view, name='api-whoami'),
+
+
+
+
+
+
     path('place-customer-order-bill/', views.placeCustomerOrderOrBill, name='customer-order-bill'),
 
 
