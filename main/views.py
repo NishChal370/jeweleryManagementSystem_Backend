@@ -212,7 +212,23 @@ def order(request, pk):
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
+@api_view(['DELETE'])
+def deleteOrder(request, pk):
+    try:
+        order = Order.objects.get(orderId=pk)
 
+        if order.status != 'pending':
+
+            return Response({"message" : "Order cannot be deleted! Is in making process."}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            order.delete()
+
+            return Response({"Order "+str(order.orderId)+" is deleted !!"}, status=status.HTTP_200_OK)
+    except:
+        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
+
+
+        
 ##Post orders
 # # @api_view(['POST'])
 # # def placeOrder(request):
