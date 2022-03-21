@@ -3,6 +3,8 @@ import collections
 import datetime
 from pyexpat import model
 import re
+from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from typing import OrderedDict
 from django.db import models
 from django.db.models import fields
@@ -19,6 +21,28 @@ import json
 with open('mail.json','r') as input_file:
     email_data = json.load(input_file)
     email = email_data['EMAIL']
+
+
+
+
+def send_Email(email_address, title, to, date, name, order_no):
+    if to == 'customer':
+        text_content = 'नमस्ते '+name+' हामी तपाईंको अर्डर #'+str(order_no)+'मिति: '+str(date)+' बाट वस्तु(हरू) पूरा भएको कुरा साझा गर्न पाउँदा खुसी छौं। कृपया आफ्नो अर्डर सङ्कलन गर्न स्टोरमा आइपुग्नुहोस् | धन्यवाद ! गिजन्तली ज्वेलर्स, काठमाडौं; नेपाल'
+        html_content = '<h2 style="color: black">नमस्ते '+name+',</h2><br/> <h3 style="color: black">हामी तपाईंको अर्डर <strong style="color: green; font-size: larger">#'+str(order_no)+'</strong> मिति: '+str(date)+' बाट वस्तु(हरू) पूरा भएको कुरा साझा गर्न पाउँदा खुसी छौं। कृपया आफ्नो अर्डर सङ्कलन गर्न स्टोरमा आइपुग्नुहोस् | धन्यवाद !</h3><br/> <h2 style="color: black">गिजन्तली ज्वेलर्स, <br/>काठमाडौं; नेपाल</h2>'
+    else:
+        text_content = 'Mail has been send to Name: '+name+'Email: '+email_address+' For order:'+ str(order_no) +''
+        html_content = '<h1>Mail has been send to</h1> <br/> <h2>Name: '+name+'<br/>Email: '+email_address+'<br/>For order:'+ str(order_no) +'</h2>'
+
+    msg = EmailMultiAlternatives(
+        title,
+        text_content,
+        None,
+        [email_address],
+    )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+    return"DONE"
+
 
 
 
@@ -689,40 +713,6 @@ class StaffWorkSerilizer(serializers.ModelSerializer):
         fields = ('staffWorkId', 'staff', 'date', 'givenWeight', 'KDMWeight', 'totalWeight',  'submittionDate', 'submittedWeight', 'finalProductWeight', 'lossWeight', 'submittedDate', 'status', 'orderProduct')
     
 
-from django.core.mail import send_mail
-from django.core.mail import EmailMultiAlternatives
-
-def send_Email(email_address, title, to, date, name, order_no):
-    # send_mail(
-    #     'Order Completion',
-    #     message,
-    #     from_email=None,
-    #     recipient_list=[email_address],
-    #     fail_silently=False,
-    # )'<p>This is an <strong>important</strong> message.</p>'
-    # name ='NISCHAL'
-    # date = '04 November, 2019'
-    # order_no =200701993688552
-    print("MAILLLLLL")
-    print(name)
-    print(email_address)
-    if to == 'customer':
-        text_content = 'नमस्ते '+name+' हामी तपाईंको अर्डर #'+str(order_no)+'मिति: '+str(date)+' बाट वस्तु(हरू) पूरा भएको कुरा साझा गर्न पाउँदा खुसी छौं। कृपया आफ्नो अर्डर सङ्कलन गर्न स्टोरमा आइपुग्नुहोस् | धन्यवाद ! गिजन्तली ज्वेलर्स, काठमाडौं; नेपाल'
-        html_content = '<h2 style="color: black">नमस्ते '+name+',</h2><br/> <h3 style="color: black">हामी तपाईंको अर्डर <strong style="color: green; font-size: larger">#'+str(order_no)+'</strong> मिति: '+str(date)+' बाट वस्तु(हरू) पूरा भएको कुरा साझा गर्न पाउँदा खुसी छौं। कृपया आफ्नो अर्डर सङ्कलन गर्न स्टोरमा आइपुग्नुहोस् | धन्यवाद !</h3><br/> <h2 style="color: black">गिजन्तली ज्वेलर्स, <br/>काठमाडौं; नेपाल</h2>'
-    else:
-        text_content = 'Mail has been send to Name: '+name+'Email: '+email_address+' For order:'+ str(order_no) +''
-        html_content = '<h1>Mail has been send to</h1> <br/> <h2>Name: '+name+'<br/>Email: '+email_address+'<br/>For order:'+ str(order_no) +'</h2>'
-
-    msg = EmailMultiAlternatives(
-        title,
-        text_content,
-        None,
-        [email_address],
-    )
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
-    # print(mail)
-    return"DONE"
 
 
 
@@ -747,7 +737,6 @@ class StaffAssignWorkSerilizer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data['status'] = 'completed'
         orderProducts = OrderProduct.objects.filter(orderId= validated_data['orderProduct'].orderId)
-        print("I aM IN----------------------------")
         if(validated_data['submittedDate'] is not None):
             updatedorderProduct = OrderProduct.objects.filter(orderProductId = validated_data['orderProduct'].orderProductId).update(status='completed')
         
@@ -763,9 +752,8 @@ class StaffAssignWorkSerilizer(serializers.ModelSerializer):
                 # to customer
                 send_Email(customer['email'], 'अर्डर पूरा भएको जानकारी गराउन चाहन्छु |', 'customer', order['date'], customer['name'], order['orderId'])
                 #to admin
-                send_Email('gitanjaliJewellers00@gmail.com', 'Order complete mail send to customer', 'admin','','','')
-                # send_Email('nishchal.370@gmail.com', 'अर्डर पूरा भएको जानकारी गराउन चाहन्छु |', 'customer')
-                # send_Email('gitanjaliJewellers00@gmail.com', 'Order complete mail send to customer', 'admin')
+                # send_Email('gitanjaliJewellers00@gmail.com', 'Order complete mail send to customer', 'admin', order['date'], customer['name'], order['orderId'])
+
         return super().update(instance, validated_data)
 
 

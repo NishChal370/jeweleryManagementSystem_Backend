@@ -204,6 +204,7 @@ def orderList(request):
 def order(request, pk):
     try:
         order = Order.objects.get(orderId=pk)
+
         serializer = CustomerOrderSerilizer(order, many=False)
 
         return Response(serializer.data)
@@ -948,7 +949,7 @@ def getStaffWorkDetail(request):
     submittionDate = request.GET.get('submittionDate')
 
     paginator = PageNumberPagination()
-    paginator.page_size = 5
+    paginator.page_size = 21
 
     if submittionDate != '':
 
@@ -957,7 +958,6 @@ def getStaffWorkDetail(request):
         staffWork = StaffWork.objects.all()
     
     if staffInfo != '': #
-        print("In")
         searchedStaff = Staff.objects.filter(Q(staffName__icontains=staffInfo) |  Q(phone__icontains=staffInfo))
         staffWork = staffWork.filter(staff__in = searchedStaff).all()
 
