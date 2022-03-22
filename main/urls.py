@@ -8,10 +8,10 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
 
-    path('login/', views.loginAdmin, name='login-admin'),
-    path('logout/', views.logoutAdmin, name='logout-admin'),
-    path('token/', views.getCsrfToken, name='tokenn-n'),
-    path('session/', views.session_view, name='session'),
+    # path('login/', views.loginAdmin, name='login-admin'),
+    # path('logout/', views.logoutAdmin, name='logout-admin'),
+    # path('token/', views.getCsrfToken, name='tokenn-n'),
+    # path('session/', views.session_view, name='session'),
 
 
     # path('login/', views.login_view, name='api-login'),
@@ -79,6 +79,7 @@ urlpatterns = [
     #Staff
     path('staff/', views.getStaffDetail, name='staff-detail'),
     path('staff/<int:pk>',views.getStaffbyId, name='staff-by-id'),
+    path('staff-update/<int:pk>',views.updateStaffById, name='staff-update-by-id'),
     path('staff/register/', views.registerStaff, name='staff-register'),
     path('staff/name/', views.getStaffNameList, name="staffs-name-list"),
     path('staff/work/', views.getStaffWorkDetail, name='staff-work'),

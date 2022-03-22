@@ -83,56 +83,56 @@ def index(response):
 
 
 
-@api_view(['POST'])
-@csrf_exempt
-@ensure_csrf_cookie
-@permission_classes((AllowAny,))
-def loginAdmin(request):
-    print("CALLED-----------------------------------------------------------")
-    # try:
-        # username = request.headers['username']
-        # password = request.headers['password']
-    admin = authenticate(request, username='admin', password='admin')
-    if admin is not None:
-        login(request, admin)
-        print("*********************************************************")
-        print(request.headers)
-        # send_Email('nishchal.370@gmail.com')
-        return Response({'message':"Welcome",'is_active':True})
-        # return Response({admin})
-    else:
-        print("Here")
-        return Response({'message':"Invalid Request", 'is_active':False})
-    # except:
-    #     print("Here2")
-    #     return Response({'message':"Invalid Request", 'is_active':False})
+# @api_view(['POST']JJJ)
+# @csrf_exempt
+# @ensure_csrf_cookie
+# @permission_classes((AllowAny,))
+# def loginAdmin(request):
+#     print("CALLED-----------------------------------------------------------")
+#     # try:
+#         # username = request.headers['username']
+#         # password = request.headers['password']
+#     admin = authenticate(request, username='admin', password='admin')
+#     if admin is not None:
+#         login(request, admin)
+#         print("*********************************************************")
+#         print(request.headers)
+#         # send_Email('nishchal.370@gmail.com')
+#         return Response({'message':"Welcome",'is_active':True})
+#         # return Response({admin})
+#     else:
+#         print("Here")
+#         return Response({'message':"Invalid Request", 'is_active':False})
+#     # except:
+#     #     print("Here2")
+#     #     return Response({'message':"Invalid Request", 'is_active':False})
 
 
 
 
-@api_view(['POST'])
-def logoutAdmin(request):
-    logout(request)
-    return Response({'message':"See you", 'is_active':False})
+# @api_view(['POST'])
+# def logoutAdmin(request):
+#     logout(request)
+#     return Response({'message':"See you", 'is_active':False})
 
-from django.middleware.csrf import get_token
+# from django.middleware.csrf import get_token
 
 
-@ensure_csrf_cookie
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def getCsrfToken(request):
-    response = Response({'detail': 'CSRF cookie set'})
-    response['X-CSRFToken'] = get_token(request)
-    return response
+# @ensure_csrf_cookie
+# @api_view(['GET'])
+# @permission_classes((AllowAny,))
+# def getCsrfToken(request):
+#     response = Response({'detail': 'CSRF cookie set'})
+#     response['X-CSRFToken'] = get_token(request)
+#     return response
 
-@api_view(['GET'])
-@ensure_csrf_cookie
-def session_view(request):
-    if not request.user.is_authenticated:
-        return Response({'isAuthenticated': False})
+# @api_view(['GET'])
+# @ensure_csrf_cookie
+# def session_view(request):
+#     if not request.user.is_authenticated:
+#         return Response({'isAuthenticated': False})
 
-    return Response({'isAuthenticated': True})
+#     return Response({'isAuthenticated': True})
 
 
 
@@ -916,6 +916,26 @@ def registerStaff(request):
         return Response(serializer.data)
     else:
         return Response(newStaff.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+#update staff by id
+@api_view(['POST'])
+def updateStaffById(request, pk):
+    try:
+        oldStaff =  Staff.objects.get(staffId= pk)
+
+        updatedStaff = StaffSerilizer(instance=oldStaff, data=request.data)
+        if updatedStaff.is_valid():
+            updatedStaff.save()
+            #returFn all staff
+            allStaffs = Staff.objects.all()
+            serializer = StaffSerilizer(allStaffs, many=True)
+            return Response(serializer.data)
+        else:
+            return Response(updatedStaff.errors, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({"Invalid !!!"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
