@@ -28,52 +28,7 @@ from datetime import date, datetime, timedelta
 
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.csrf import ensure_csrf_cookie
-
-# # import json
-
-# # from django.http import JsonResponse
-# # from django.views.decorators.http import require_POST
-
-# # @require_POST
-# # def login_view(request):
-# #     data = json.loads(request.body)
-# #     username = data.get('username')
-# #     password = data.get('password')
-
-# #     if username is None or password is None:
-# #         return JsonResponse({'detail': 'Please provide username and password.'}, status=400)
-
-# #     user = authenticate(username=username, password=password)
-
-# #     if user is None:
-# #         return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
-
-# #     login(request, user)
-# #     return JsonResponse({'detail': 'Successfully logged in.'})
-
-
-# # def logout_view(request):
-# #     if not request.user.is_authenticated:
-# #         return JsonResponse({'detail': 'You\'re not logged in.'}, status=400)
-
-# #     logout(request)
-# #     return JsonResponse({'detail': 'Successfully logged out.'})
-
-
-# # @ensure_csrf_cookie
-# # def session_view(request):
-# #     if not request.user.is_authenticated:
-# #         return JsonResponse({'isAuthenticated': False})
-
-# #     return JsonResponse({'isAuthenticated': True})
-
-
-# # def whoami_view(request):
-# #     if not request.user.is_authenticated:
-# #         return JsonResponse({'isAuthenticated': False})
-
-# #     return JsonResponse({'username': request.user.username})
-
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
@@ -82,61 +37,16 @@ def index(response):
     return HttpResponse("Hello from API")
 
 
+@api_view(['POST'])
+def LogoutView(request):
+    try:
+        refresh_token = request.data["refresh_token"]
+        token = RefreshToken(refresh_token)
+        token.blacklist()
 
-# @api_view(['POST']JJJ)
-# @csrf_exempt
-# @ensure_csrf_cookie
-# @permission_classes((AllowAny,))
-# def loginAdmin(request):
-#     print("CALLED-----------------------------------------------------------")
-#     # try:
-#         # username = request.headers['username']
-#         # password = request.headers['password']
-#     admin = authenticate(request, username='admin', password='admin')
-#     if admin is not None:
-#         login(request, admin)
-#         print("*********************************************************")
-#         print(request.headers)
-#         # send_Email('nishchal.370@gmail.com')
-#         return Response({'message':"Welcome",'is_active':True})
-#         # return Response({admin})
-#     else:
-#         print("Here")
-#         return Response({'message':"Invalid Request", 'is_active':False})
-#     # except:
-#     #     print("Here2")
-#     #     return Response({'message':"Invalid Request", 'is_active':False})
-
-
-
-
-# @api_view(['POST'])
-# def logoutAdmin(request):
-#     logout(request)
-#     return Response({'message':"See you", 'is_active':False})
-
-# from django.middleware.csrf import get_token
-
-
-# @ensure_csrf_cookie
-# @api_view(['GET'])
-# @permission_classes((AllowAny,))
-# def getCsrfToken(request):
-#     response = Response({'detail': 'CSRF cookie set'})
-#     response['X-CSRFToken'] = get_token(request)
-#     return response
-
-# @api_view(['GET'])
-# @ensure_csrf_cookie
-# def session_view(request):
-#     if not request.user.is_authenticated:
-#         return Response({'isAuthenticated': False})
-
-#     return Response({'isAuthenticated': True})
-
-
-
-
+        return Response(status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -169,15 +79,15 @@ def customerById(request, pk):
 ##Register customer with order or bill (or if customer exist add bill or order in existing customer)
 @api_view(['POST'])
 def placeCustomerOrderOrBill(request):
-     
+
     if(Customer.objects.filter(name= request.data['name']).exists()):
         oldCustomer = Customer.objects.get(name= request.data['name'])
         newCustomerOrder = CustomerSerilizer(instance= oldCustomer, data= request.data)
     else:
         newCustomerOrder = CustomerSerilizer(data= request.data)
-        
+
     if newCustomerOrder.is_valid():
-        newCustomerOrder.save()  
+        newCustomerOrder.save()
 
         return Response(newCustomerOrder.data)
     else:
@@ -228,7 +138,7 @@ def deleteOrder(request, pk):
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
 
 
-        
+
 ##Post orders
 # # @api_view(['POST'])
 # # def placeOrder(request):
@@ -242,9 +152,7 @@ def deleteOrder(request, pk):
 # #         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# from rest_framework.parsers import MultiPartParser
-# from rest_framework.decorators import parser_classes
-# @parser_classes((MultiPartParser, ))
+
 ##Generate Order
 @api_view(['POST'])
 def generateOrder(request):
@@ -263,7 +171,7 @@ def generateOrder(request):
         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-#update customer order 
+#update customer order
 @api_view(['POST'])
 def orderUpdate(request):
     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
@@ -273,7 +181,7 @@ def orderUpdate(request):
         serilizer.save()
 
         return Response(serilizer.data)
-    
+
     return Response(serilizer.errors)
 
 
@@ -308,13 +216,13 @@ def orderListSummary(request):
     type = request.GET.get('type') # Query param
     status = request.GET.get('status')
     customerInfo = request.GET.get('customerInfo')
-    
+
     paginator = PageNumberPagination()
     paginator.page_size = 21
-    
+
     if customerInfo != None:
         searchedCustomer = Customer.objects.filter(Q(name__icontains=customerInfo) | Q(address__icontains=customerInfo) | Q(phone__icontains=customerInfo))
-    
+
     customerIdList = []
     for c in searchedCustomer:
         customerIdList.append(c.customerId)
@@ -330,7 +238,7 @@ def orderListSummary(request):
 
     if type != 'all':
         orders = orders.filter(type= type)
-    
+
     if status != 'all':
         orders = orders.filter(status = status)
 
@@ -375,7 +283,7 @@ def pendingOrderProductDetail(request,orderId):
             return Response({"Order  work is already assigned"}, status=status.HTTP_510_NOT_EXTENDED)
     except:
         return Response({"Not Found"}, status=status.HTTP_404_NOT_FOUND)
-    
+
 
 '''
     # Bills
@@ -383,7 +291,7 @@ def pendingOrderProductDetail(request,orderId):
 
 ##Get all bills
 @api_view(['GET'])
-def billsList(request): 
+def billsList(request):
     bills = Bill.objects.all()
     serializer = BillSerilizer(bills, many=True)
 
@@ -401,7 +309,7 @@ def billsListSummmary(request):
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
-    
+
     if billDate is not None:
         bills = Bill.objects.filter(date__range = [billDate, nowDate]) #.order_by('-date', '-billId')
     else:
@@ -449,7 +357,7 @@ def getBillSummaryByCustomerInfo(request, searchValue):
         else:
             searchedBills = Bill.objects.filter(customerId=c).filter(billType= billType).values_list('billId', flat=True)
 
-        billsIdList.extend(searchedBills)  
+        billsIdList.extend(searchedBills)
 
     searchedBills = Bill.objects.filter(billId__in=billsIdList)
 
@@ -458,7 +366,7 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     else:
         searchedBills =searchedBills.all()
 
-    if billStatus != 'all': 
+    if billStatus != 'all':
         #fiter by bill status {submitted, draft}
         searchedBills = searchedBills.filter(status = billStatus)
     else:
@@ -467,12 +375,12 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     result_page = paginator.paginate_queryset(searchedBills, request)
 
     serializer = BillSearchSerilizer(result_page, many=True)
-    
+
     #current page with total page
     data = paginator.get_paginated_response(serializer.data)
     data.data['pageIndex'] = str(paginator.page).replace('<Page ', '').replace('>', '')
 
-    return data    
+    return data
 
 
 
@@ -537,7 +445,7 @@ def generateBill(request):
 
 
 #Update Bill
-@api_view(['POST']) 
+@api_view(['POST'])
 def billUpdate(request):
     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
     serilizer = UpdateExistingBillSerilizer(instance=oldCustomer, data=request.data)
@@ -546,9 +454,9 @@ def billUpdate(request):
         serilizer.save()
 
         return Response(serilizer.data)
-    
+
     return Response(serilizer.errors)
-    
+
 
 
 ##Get customer bill
@@ -569,7 +477,7 @@ def getMonthlyBillProductReport(request):
     weekNumber = 0
     final_report = []
     selected_date = datetime.strptime(month_start_date, "%Y-%m-%d")
-    
+
     for week in getWeekStartAndEndDate(selected_date):
         weekNumber +=1
         if len(week)>1:
@@ -600,7 +508,7 @@ def getSalesReport(request):
     week_number = 0
     selected_date = datetime.strptime(request.GET.get('date') , "%Y-%m-%d")
     final_report=[]
-    
+
     for week in getWeekStartAndEndDate(selected_date):
         week_number += 1
         if week[0]<date.today():
@@ -611,7 +519,7 @@ def getSalesReport(request):
 
             weekly_due_bills = weekly_bills.filter(remainingAmount__gt =0).all()
             weekly_payed_bills = weekly_bills.filter(remainingAmount__lte =0).all()
-            
+
             due_amount = 0
             payed_amount = 0
             total_amount = 0
@@ -625,7 +533,7 @@ def getSalesReport(request):
             report={'week' :'week '+str(week_number),'report' :{'total amount' :total_amount,'due amount' :due_amount, 'payed amount': payed_amount}}
             # report = {'total amount' :total_amount,'due amount' :due_amount, 'payed amount': payed_amount}
             final_report.append(report)
-    
+
     labels = []
     datas={'total amount' :[], 'payed amount' :[], 'due amount' :[],}
     for report in final_report:
@@ -642,11 +550,11 @@ def getSalesReport(request):
 def getIncrementReport(request):
     this_month_first_date = datetime.today().replace(day=1).date()
     this_month_last_day = calendar.monthrange(this_month_first_date.year, this_month_first_date.month)[1]
-    this_month_last_date = datetime.today().replace(day=this_month_last_day).date() 
+    this_month_last_date = datetime.today().replace(day=this_month_last_day).date()
 
     previous_month_first_date = datetime.today().replace(month=this_month_first_date.month-1, day=1).date()
     previous_month_last_day = calendar.monthrange(previous_month_first_date.year, previous_month_first_date.month)[1]
-    previous_month_last_date = datetime.today().replace(month=this_month_first_date.month-1, day=previous_month_last_day).date() 
+    previous_month_last_date = datetime.today().replace(month=this_month_first_date.month-1, day=previous_month_last_day).date()
     #bill
     this_month_bills = Bill.objects.filter(date__range=[this_month_first_date, this_month_last_date]).all()
     previous_month_bills = Bill.objects.filter(date__range=[previous_month_first_date, previous_month_last_date]).all()
@@ -671,8 +579,8 @@ def getIncrementReport(request):
     previous_month_total_staffwork = len(previous_month_staffworks)
 
     staffwork_increment_percent = ((this_month_total_staffwork-previous_month_total_staffwork)/(this_month_total_staffwork+previous_month_total_staffwork))*100
-    
-    report={ 'bill':{'total':this_month_total_bill, 'increment':str(int(round(bill_increment_percent)))+'%'}, 
+
+    report={ 'bill':{'total':this_month_total_bill, 'increment':str(int(round(bill_increment_percent)))+'%'},
             'order':{'total':this_month_total_order, 'increment':str(int(round(order_increment_percent)))+'%'},
             'staffWork':{'total':this_month_total_staffwork, 'increment':str(int(round(staffwork_increment_percent)))+'%'},}
 
@@ -737,7 +645,7 @@ def updateTodaysRate(request, pk):
     try:
         rate = Rate.objects.get(rateId = pk)
         # allow to update todays date only
-        if(rate.date == datetime.date.today()) : 
+        if(rate.date == datetime.date.today()) :
             updatedRate = RateSerilizer(instance=rate, data=request.data)
 
             if updatedRate.is_valid():
@@ -814,11 +722,11 @@ def getRateReport(request):
             month += 1
             month_start_date = datetime.now().replace(month=month, day=1).date()
             month_last_day = calendar.monthrange(month_start_date.year, month_start_date.month)[1]
-            
+
             month_end_date = datetime.now().replace(month=month,day=month_last_day).date()
 
             monthList.append([month_start_date, month_end_date])
-        
+
         rateYearlyRateList= []
         for month in monthList:
             serilizer = RateSerilizer(Rate.objects.filter(date__range=[month[0], month[1]]), many=True).data
@@ -833,17 +741,17 @@ def getRateReport(request):
                     hallmarkRateTotal += data['hallmarkRate']
 
                 rateYearlyRateList.append({"index":month[0].strftime("%B"), 'avgHallmarkRate' :(hallmarkRateTotal/len(serilizer))/1000, 'avgTajabiRate' :(tajabiRateTotal/len(serilizer))/1000, 'avgSilverRate': (silverRateTotal/len(serilizer))/100})
-                
+
         return Response(rateYearlyRateList)
-        
-    
-    
+
+
+
 
 
 def getWeekStartAndEndDate(date):
     month_first_date = date.replace(day=1).date()
     month_last_day = calendar.monthrange(month_first_date.year, month_first_date.month)[1]
-    month_last_date = date.replace(day=month_last_day).date() 
+    month_last_date = date.replace(day=month_last_day).date()
     tempList =[]
     weekDayList =[]
     tempDate = month_first_date
@@ -869,7 +777,7 @@ def getWeekStartAndEndDate(date):
     tempList =[]
 
     return weekDayList
-            
+
 
 '''
  # Staff
@@ -992,7 +900,7 @@ def getStaffWorkDetail(request):
         staffWork = StaffWork.objects.filter(submittionDate__gte = submittionDate).order_by('submittionDate').all()
     else:
         staffWork = StaffWork.objects.all()
-    
+
     if staffInfo != '': #
         searchedStaff = Staff.objects.filter(Q(staffName__icontains=staffInfo) |  Q(phone__icontains=staffInfo))
         staffWork = staffWork.filter(staff__in = searchedStaff).all()
@@ -1002,17 +910,17 @@ def getStaffWorkDetail(request):
         orderProduct = OrderProduct.objects.filter(orderId=searchedOrder).all()
 
         staffWork = staffWork.filter(orderProduct__in = orderProduct).all()
-    
+
     if workStatus != '':
         staffWork = staffWork.filter(status = workStatus).all()
-    
+
     if type != '':
         searchedOrder = Order.objects.filter(type=type)
         orderProduct = OrderProduct.objects.filter(orderId__in =searchedOrder).all()
 
         staffWork = staffWork.filter(orderProduct__in = orderProduct).all()
 
-    if submittionDate == '':   
+    if submittionDate == '':
         staffWork = staffWork.order_by('-date', '-staffWorkId')
 
     result_page = paginator.paginate_queryset(staffWork, request)
@@ -1040,7 +948,7 @@ def assignStaffWork(request):
 
     if newWork.is_valid():
         newWork.save()
-        
+
         return Response(newWork.data)
     else:
         return Response(newWork.error_messages, status=status.HTTP_404_NOT_FOUND)
@@ -1100,7 +1008,7 @@ from rest_framework.pagination import PageNumberPagination
 
 #Get all bills
 @api_view(['GET'])
-def billsList(request): 
+def billsList(request):
     paginator = PageNumberPagination()
     paginator.page_size = 1
     bills = Bill.objects.all()
@@ -1114,7 +1022,7 @@ def billsList(request):
 
 
 ##-------------------------------------->>>>>
-# @api_view(['POST']) 
+# @api_view(['POST'])
 # def billUpdate(request):
 #     customer = request.data
 #     bill = customer.pop('bills')[0]
@@ -1134,13 +1042,13 @@ def billsList(request):
 #     for billProduct in billProductList:
 #         print("In")
 #         product = billProduct.pop('product')
-    
+
 #         if "billProductId" not in  billProduct:
 #             # add product for existing customer
 #             newProduct = Product.objects.create(**product)
 
 #             # add billProduct for existing customer
-            
+
 #             # BillProduct.objects.create(billId=bill, productId=newProduct, **billProduct)
 #             newBillProduct = BillProduct.objects.create(billId=bill, productId=newProduct, **billProduct)
 #         else:
@@ -1160,7 +1068,7 @@ def billsList(request):
 #             print(billProduct)
 #         print("DONE")
 
-   
+
 #     #assemblingupdated data in reqd format
 #     updatedBill = BillDetailSerilizer(bill, many=False).data
 #     updatedCustomer = updatedBill.pop('customer')
@@ -1169,21 +1077,21 @@ def billsList(request):
 #     return Response(updatedCustomer)
 ##--------------------------------------<<<
 
-# @api_view(['POST']) 
+# @api_view(['POST'])
 # def billUpdate(request):
 #     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
 #     updatedBill = UpdateExistingBillSerilizer(instance=request.data['customerId'], data = request.data)
 #     if updatedBill.is_valid():
 #         updatedBill.save()
-    
+
 #     return Response({"Hello"})
 
-# @api_view(['POST']) 
+# @api_view(['POST'])
 # def billUpdate(request):
 
 #     print(request.data)
 #     print()
-    
+
 #     bill =request.data.pop('bills')[0]
 #     print("CUSTOMER")
 #     print(request.data)
@@ -1191,7 +1099,7 @@ def billsList(request):
 #     print("BILL")
 #     print(bill)
 #     print()
-    
+
 #     billProducts = bill.pop('billProduct')
 #     print(billProducts)
 #     for billProduct in billProducts:
@@ -1205,23 +1113,23 @@ def billsList(request):
 
 
 # ##Update bill
-# @api_view(['POST']) 
+# @api_view(['POST'])
 # def billUpdate(request):
 #     data = request.data
 #     bill = data.pop('bills')[0]
 #     #update customer
 #     oldCustomer = Customer.objects.get(customerId= data['customerId'])
-  
+
 #     updatedCustomer = CustomerInfoSerilizer(instance = oldCustomer, data = data)
 #     if updatedCustomer.is_valid():
 #         updatedCustomer.save()
 #     else:
 #         return Response(updatedCustomer.error_messages)
-    
+
 #     billProductList = bill.pop('billProduct')
 #     #update bill
 #     oldBill = Bill.objects.get(billId = bill['billId'])
-   
+
 #     updatedBill = BillInfoSerilizer(instance = oldBill, data = bill)
 #     if updatedBill.is_valid():
 #         updatedBill.save()
@@ -1235,13 +1143,13 @@ def billsList(request):
 #         print(billProduct)
 #         # #update Bill product
 #         # oldBillProduct = BillProduct.objects.get(billProductId = billProduct['billProductId'])
-       
+
 #         # updatedBillProduct = BillProductInfoSerilizer(instance = oldBillProduct, data = billProduct)
 #         # if updatedBillProduct.is_valid():
 #         #     updatedBillProduct.save()
 #         # else:
 #         #     return Response(updatedBillProduct.error_messages)
- 
+
 #         # #update product
 #         # oldProduct = Product.objects.get(productId =product['productId'])
 #         # updatedProduct = ProductSerilizer(instance = oldProduct, data = product)
@@ -1253,7 +1161,7 @@ def billsList(request):
 #     newBill = GenerateBillSerilizer(oldCustomer, many=False)
 #    return Response(newBill.data)
 
-# @api_view(['POST']) 
+# @api_view(['POST'])
 # def billUpdate(request):
 #     # print(data)
 #     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])

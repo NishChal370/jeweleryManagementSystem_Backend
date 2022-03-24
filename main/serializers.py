@@ -14,7 +14,8 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate, Staff, StaffWork
-
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 import json
@@ -44,6 +45,21 @@ def send_Email(email_address, title, to, date, name, order_no):
     return"DONE"
 
 
+
+# for login
+class CustomJWTSerializer(TokenObtainPairSerializer):
+
+    def validate(self, attrs):
+        credentials = {
+            'username': '',
+            'password': attrs.get("password")
+        }
+
+        user_obj = User.objects.filter(email=attrs.get("username")).first()
+        if user_obj:
+            credentials['username'] = user_obj.username
+
+        return super().validate(credentials)
 
 
 '''

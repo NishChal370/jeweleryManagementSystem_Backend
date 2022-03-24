@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
 
 ]
 
@@ -149,127 +150,71 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static/images')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-
+    
 CORS_ALLOWED_ORIGINS = [
-
-    'http://127.0.0.1:3000',
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CORS_ORIGIN_ALLOW_ALL = True
 
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000'
 ]
 
-
-
-
-# # # # CORS_ALLOW_CREDENTIALS = True
-
-
-# # # # # change to https://app.example.com in production settings
-# # # CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
-
-
-
-
-# # # CORS_EXPOSE_HEADERS = ['Content-Type', 'Cookie']
-
-# # # CSRF_TRUSTED_ORIGINS = ['http://localhost:3000',]
-# # # CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
-# # # CORS_ALLOW_CREDENTIALS = True
-
-# # # CSRF_COOKIE_SAMESITE = 'Lax' #Lax allows us to send CSRF cookies in external requests.
-# # # SESSION_COOKIE_SAMESITE = 'Lax'
-# # # CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
-# # # SESSION_COOKIE_HTTPONLY = False
-
-
-# REST_FRAMEWORK={
-#     'DEFAULT_AUTHENTICATION_CLASSES':[
-#         'rest_framework.authentication.SessionAuthentication'
-#     ],
-#     'DEFAULT_PERMISSION_CLASSES':[
-#         'rest_framework.permissions.IsAuthenticated'
-#     ]
-# }
-
-#STATIC_URL = '/static/' #IsAdminUser'
-#MEDIA_ROOT = BASE_DIR/'uploads'
-#MEDIA_URL = '/images/'
-
-
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_HTTPONLY = False
-SESSION_COOKIE_HTTPONLY = False
-
-# PROD ONLY
-# CSRF_COOKIE_SECURE = True
-# SESSION_COOKIE_SECURE = True
-
-CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 CORS_ORINGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
-# CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+from datetime import timedelta
 
-# CSRF_COOKIE_NAME = 'X-CSRFTOKEN'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
 
-# CORS_ALLOW_HEADERS = [
-#     'X-CSRFTOKEN',
-#     'csrftoken',
-#     'X-XSRF-TOKEN',
-#     'content-type',
-#     'x-requested-with',
-#     'Authorization',
-#     'Set-Cookie'
-# ]
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
 
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
 
-# # CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
 
-# # CSRF_COOKIE_DOMAIN = 'http://192.168.56.1:3000' 
+    'JTI_CLAIM': 'jti',
 
-# # CSRF_COOKIE_PATH = 'http://localhost:3000'
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
 
-# # SESSION_COOKIE_DOMAIN = 'http://localhost:3000'
-
-
-
-
-# CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
-
-# CSRF_COOKIE_NAME = 'X-CSRFTOKEN'
-
-# CORS_ALLOW_HEADERS = [
-#     'X-CSRFTOKEN',
-#     'csrftoken',
-#     'X-XSRF-TOKEN',
-#     'content-type',
-#     'x-requested-with',
-#     'Authorization',
-#     'Set-Cookie'
-# ]
-
-# CORS_ALLOW_CREDENTIALS = True
-
-# CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
-
-# CSRF_COOKIE_DOMAIN = 'http://192.168.56.1:3000' 
-
-# CSRF_COOKIE_PATH = 'http://localhost:3000'
-
-# SESSION_COOKIE_DOMAIN = 'http://localhost:3000'
+## this is for image
+#STATIC_URL = '/static/' #IsAdminUser'
+#MEDIA_ROOT = BASE_DIR/'uploads'
+#MEDIA_URL = '/images/'
 
 
-
-
-
-
-# CSRF_COOKIE_SAMESITE = 'Strict'
-# SESSION_COOKIE_SAMESITE = 'Strict'
-# CSRF_COOKIE_HTTPONLY = False  # False since we will grab it via universal-cookies
-# SESSION_COOKIE_HTTPONLY = False
 import json
 
 with open('mail.json','r') as input_file:
