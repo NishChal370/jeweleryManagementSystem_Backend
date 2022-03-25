@@ -4,7 +4,7 @@ from django.urls.conf import path
 from main.serializers import CustomJWTSerializer
 
 from . import views
-
+from django.urls.conf import include
 
 from rest_framework_simplejwt.views import(
     TokenObtainPairView,
@@ -22,6 +22,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', views.LogoutView, name='auth_logout'),
 
+    path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 
     path('place-customer-order-bill/', views.placeCustomerOrderOrBill, name='customer-order-bill'),
 

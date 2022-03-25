@@ -9,6 +9,11 @@ import datetime
 from django.utils.timezone import now
 
 
+from django.dispatch import receiver
+from django_rest_passwordreset.signals import reset_password_token_created
+from django.core.mail import send_mail  
+
+
 
 # Create your models here.
 class Customer(models.Model):
@@ -177,3 +182,32 @@ class StaffWork(models.Model):
 
     def __str__(self):
         return f'{self.staffWorkId}'
+
+
+
+
+import json
+
+with open('mail.json','r') as input_file:
+    email_data = json.load(input_file)
+    email_address = email_data['EMAIL']
+    
+
+@receiver(reset_password_token_created)
+def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
+
+    email_plaintext_message = reset_password_token.key
+    # email_plaintext_message = "{}?token={}".format(reverse('password_reset:reset-password-request'), reset_password_token.key)
+    print(reset_password_token.key)
+    send_mail(
+        # title:
+        "Password Reset for {title}".format(title="Gitanjali Jewellers"),
+        # message:
+        email_plaintext_message,
+        # from:
+        email_address,
+        # "gitanjalijewellers00@gmail.com",
+        # to:
+        [reset_password_token.user.email]
+        
+    )
