@@ -19,8 +19,8 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.pagination import PageNumberPagination
 # from django.core.mail import send_mail
-from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork
-from main.serializers import BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer, send_Email
+from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork, User
+from main.serializers import AdminSerilizer, BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer, send_Email
 
 from django.utils import timezone
 import calendar
@@ -47,6 +47,28 @@ def LogoutView(request):
         return Response(status=status.HTTP_205_RESET_CONTENT)
     except Exception as e:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+def getAdminDetail(request):
+    admin = User.objects.all()
+    serializer = AdminSerilizer(admin, many=True)
+    return Response(serializer.data[0])
+
+
+@api_view(['POST'])
+def updateAdminDetail(request):
+    oldData = User.objects.get(id=1)
+    serializer = AdminSerilizer(instance=oldData, data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+
+        return Response(serializer.data)
+
+    return Response(serializer.errors)
+
 
 
 

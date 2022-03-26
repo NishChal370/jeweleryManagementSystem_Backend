@@ -17,6 +17,7 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     full_name = models.CharField(max_length=30, null=True, blank=True)
     pan_number = models.FloatField(null=True, blank = True)
+    phone = models.FloatField(null=True, blank = True)
     register_date = models.DateField(null=True, blank=True)
 
 

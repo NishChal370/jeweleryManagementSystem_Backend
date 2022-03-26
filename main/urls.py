@@ -86,4 +86,8 @@ urlpatterns = [
     path('staff/assign/work/',views.assignStaffWork, name='staff-work-assign'),
     path('staff/delete/<int:pk>', views.deleteStaffById, name='staff-delete-by-id'),
 
+
+    path('admin/', views.getAdminDetail, name='admin-detail'),
+    path('admin/update/', views.updateAdminDetail, name='admin-detail-update'),
+
 ]
