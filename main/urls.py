@@ -22,7 +22,10 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', views.LogoutView, name='auth_logout'),
 
+    path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
     path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
+    
+
 
     path('place-customer-order-bill/', views.placeCustomerOrderOrBill, name='customer-order-bill'),
 

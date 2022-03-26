@@ -26,6 +26,17 @@ class AdminSerilizer(serializers.ModelSerializer):
         fields = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'phone', 'register_date','pan_number')
 
 
+
+class ChangePasswordSerializer(serializers.Serializer):
+    model = User
+    """
+    Serializer for password change endpoint.
+    """
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+
+
 import json
 with open('mail.json','r') as input_file:
     email_data = json.load(input_file)
