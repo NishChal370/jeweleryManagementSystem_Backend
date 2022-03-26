@@ -241,3 +241,7 @@ EMAIL_HOST_USER = email
 EMAIL_HOST_PASSWORD = password
 EMAIL_USE_TLS = True
 EMAIL_PORT = port
+
+
+#for creating custom user
+AUTH_USER_MODEL = 'main.User'

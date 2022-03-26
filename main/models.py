@@ -12,7 +12,12 @@ from django.utils.timezone import now
 from django.dispatch import receiver
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail  
+from django.contrib.auth.models import AbstractUser
 
+class User(AbstractUser):
+    full_name = models.CharField(max_length=30, null=True, blank=True)
+    pan_number = models.FloatField(null=True, blank = True)
+    register_date = models.DateField(null=True, blank=True)
 
 
 # Create your models here.

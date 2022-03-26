@@ -13,9 +13,17 @@ from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate, Staff, StaffWork
-from django.contrib.auth.models import User
+from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate, Staff, StaffWork, User
+#from django.contrib.auth.models import User->
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+
+class AdminSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        # fields = '__all__'
+        fields = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'register_date','register_date')
 
 
 import json

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin.sites import site
 
-from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate, Staff, StaffWork
+from .models import Bill, BillProduct, Customer, Order, OrderProduct, Product, Rate, Staff, StaffWork, User
 
 
 
@@ -49,8 +49,14 @@ class StaffWorkDisplay(admin.ModelAdmin):
     list_display = ('staffWorkId', 'staff', 'orderProduct', 'date', 'givenWeight', 'KDMWeight', 'totalWeight',  'submittionDate', 'submittedWeight', 'finalProductWeight', 'lossWeight', 'submittedDate', 'status')
 
 
+class UserDisplay(admin.ModelAdmin):
+    list_display = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'register_date','register_date')
+
+
+
 
 # Register your models here.
+admin.site.register(User,UserDisplay)
 admin.site.register(Customer, CustomerDisplay)
 admin.site.register(Rate, RateDisplay)
 admin.site.register(Bill, BillDisplay)
