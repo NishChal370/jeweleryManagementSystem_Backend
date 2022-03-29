@@ -4,6 +4,7 @@ from turtle import mode
 from django.db import models
 from django.db.models.base import Model
 from django.db.models.deletion import CASCADE
+from django.core.mail import EmailMultiAlternatives
 
 import datetime
 from django.utils.timezone import now
@@ -13,6 +14,7 @@ from django.dispatch import receiver
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail  
 from django.contrib.auth.models import AbstractUser
+
 
 class User(AbstractUser):
     full_name = models.CharField(max_length=30, null=True, blank=True)
@@ -192,28 +194,17 @@ class StaffWork(models.Model):
 
 
 
-import json
-
-with open('mail.json','r') as input_file:
-    email_data = json.load(input_file)
-    email_address = email_data['EMAIL']
-    
 
 @receiver(reset_password_token_created)
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
 
-    email_plaintext_message = reset_password_token.key
-    # email_plaintext_message = "{}?token={}".format(reverse('password_reset:reset-password-request'), reset_password_token.key)
-    print(reset_password_token.key)
-    send_mail(
-        # title:
-        "Password Reset for {title}".format(title="Gitanjali Jewellers"),
-        # message:
-        email_plaintext_message,
-        # from:
-        email_address,
-        # "gitanjalijewellers00@gmail.com",
-        # to:
-        [reset_password_token.user.email]
-        
+    text_content = 'Password Reset Seems like you forget your password for Gitanjali Jewellers. If this is true,Click below to reset your password. If you don\'t mean to reset your password, then you can just ignore this enail; your password will not change.'
+    html_content = '<div style="Color:black;"><h1 style="margin:1rem 0rem 0rem 35%; color:#012970; font-size:3rem;" >Password Reset</h1><br/><div style="margin:0rem 0rem 3rem 17%; font-size:1.2rem;">Seems like you forget your password for Gitanjali Jewellers. If this is true, Click below to reset your password.</div><br/><a href="http://localhost:3000/?token='+reset_password_token.key+'" style="margin:1rem 0rem 1rem 39%; color:white; background-color:green; padding:1rem; border-radius:0.6rem; font-size:1.3rem; text-decoration: none;">Choose a new password</a><br/><div style="margin:3rem 0rem 0rem 28%"> If you don\'t mean to reset your password, then you can just ignore this email; your password will not change.</div></div>'
+    msg = EmailMultiAlternatives(
+        "Reset Password",
+        text_content,
+        None,
+        [reset_password_token.user.email],
     )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
