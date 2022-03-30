@@ -456,12 +456,12 @@ def generateBill(request):
         oldCustomer = Customer.objects.get(name= request.data['name'])
         newBill = GenerateBillSerilizer(instance= oldCustomer, data= request.data)
     else:
-
+        
         newBill = GenerateBillSerilizer(data= request.data)
 
     if newBill.is_valid():
         newBill.save()
-
+        print(newBill.data)
         return Response(newBill.data)
     else:
         return Response(newBill._errors, status=status.HTTP_400_BAD_REQUEST)
@@ -699,21 +699,18 @@ def getRateReport(request):
 
     if reportType == 'weekly':
         todays_day_index =datetime.today().isoweekday()
-        print("INSIODE")
-        print(todays_day_index)
-        # print(dayIndex[todays_day_index])
+
         week_start_date = datetime.today() - timedelta(days= todays_day_index) if todays_day_index != 7 else datetime.today()
         # week_start_date = datetime.today() - timedelta(days= dayIndex[todays_day_index])
         week_end_date = week_start_date + timedelta(days=6)
-        print(week_start_date)
-        print(week_end_date)
+
         rates = Rate.objects.filter(date__range=[week_start_date, week_end_date])
 
         rateWeeklyRateList=[]
         serializer = RateSerilizer(rates, many=True).data
         for data in serializer:
             rateWeeklyRateList.append({"index":data['date'], 'hallmarkRate' :(data['hallmarkRate'])/1000, 'tajabiRate' :(data['tajabiRate'])/1000, 'silverRate': (data['silverRate'])/100})
-        print(rateWeeklyRateList)
+
         return Response(rateWeeklyRateList)
 
     elif reportType == 'monthly':
@@ -795,9 +792,6 @@ def getWeekStartAndEndDate(date):
         tempDate = tempDate + timedelta(days= day)
 
     tempList.append(month_last_date)
-    print("->")
-    print(tempList)
-    print("<-")
     weekDayList.append(tempList)
     tempList =[]
 

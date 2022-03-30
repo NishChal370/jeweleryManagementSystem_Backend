@@ -141,7 +141,7 @@ class BillSerilizer(serializers.ModelSerializer):
     billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model = Bill
-        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct', 'qr_code')
 
 
 
@@ -153,7 +153,7 @@ class BillDetailSerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = Bill
-        fields = ('billId', 'orderId','date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+        fields = ('billId', 'orderId','date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct', 'qr_code')
     
     def to_representation(self, instance): # it shows all the customer insted of id
         rep = super().to_representation(instance)
@@ -241,7 +241,7 @@ class BillSearchSerilizer(serializers.ModelSerializer, APIView):
 
     class Meta:
         model = Bill
-        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct', 'qr_code')
 
     def to_representation(self, data):
         searchData = {'billId': '', 'customerId':'', 'customerName':'',  'phone':'', 'type':'', 'totalProduct': '', 'productsWeight':'', 'customerProductWeight': '', 'status':  '', 'payment': '', 'date': ''}
@@ -391,7 +391,7 @@ class BillForUpdateSerilizer(serializers.ModelSerializer):
     billProduct = BillProductForUpdateSerilizer(required=False, many=True, read_only=False, allow_null=True )
     class Meta:
         model = Bill
-        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct')
+        fields = ('billId', 'orderId', 'customerId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct', 'qr_code')
         extra_kwargs = {'billId': {'required':False,'read_only':False, 'allow_null':True}}
 
 
@@ -770,9 +770,12 @@ class StaffAssignWorkSerilizer(serializers.ModelSerializer):
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
-        validated_data['status'] = 'completed'
+        
         orderProducts = OrderProduct.objects.filter(orderId= validated_data['orderProduct'].orderId)
+
         if(validated_data['submittedDate'] is not None):
+            validated_data['status'] = 'completed'
+
             updatedorderProduct = OrderProduct.objects.filter(orderProductId = validated_data['orderProduct'].orderProductId).update(status='completed')
         
             productStatus = []

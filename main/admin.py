@@ -16,7 +16,7 @@ class RateDisplay(admin.ModelAdmin):
 
 
 class BillDisplay(admin.ModelAdmin):
-    list_display = ('billId', 'customerId', 'orderId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
+    list_display = ('billId', 'customerId', 'orderId', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'qr_code')
 
 
 
@@ -31,7 +31,7 @@ class ProductDisplay(admin.ModelAdmin):
 
 
 class BillProductDisplay(admin.ModelAdmin):
-    list_display = ('billProductId', 'billId', 'productId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct')
+    list_display = ('billProductId', 'billId', 'productId', 'quantity', 'lossWeight', 'totalWeight', 'rate', 'makingCharge', 'totalAmountPerProduct',)
 
 
 

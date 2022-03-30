@@ -15,6 +15,10 @@ from django_rest_passwordreset.signals import reset_password_token_created
 from django.core.mail import send_mail  
 from django.contrib.auth.models import AbstractUser
 
+import qrcode
+from io import BytesIO
+from django.core.files import File
+from PIL import Image, ImageDraw
 
 class User(AbstractUser):
     full_name = models.CharField(max_length=30, null=True, blank=True)
@@ -91,9 +95,27 @@ class Bill(models.Model):
     payedAmount = models.FloatField(null=True, blank=True)
     remainingAmount = models.FloatField(null=True, blank=True)
     status = models.CharField(max_length=11, null=False, choices=bill_status, default='submitted')
+    qr_code = models.ImageField(upload_to='qr_code', blank=True)
 
     def __str__(self):
         return f'{self.billId}'
+
+    def save(self, *args, **kwargs):
+        customer = Customer.objects.get(customerId = self.customerId.customerId)
+        last_bill = Bill.objects.all().order_by('-billId')[:1][0]
+        data = f'''Invoice no = {str(int(last_bill.billId)+1)} \nName = {customer.name} \nDate = {self.date} \nBill Type = {self.billType} \nTotal Amount = {self.grandTotalAmount} \nAdvance = {self.advanceAmount} \nremainingAmount = {self.remainingAmount}'''
+        qrcode_img = qrcode.make(data)
+        canvas = Image.new('RGB',(600,600), 'white')
+        draw = ImageDraw.Draw(canvas)
+        canvas.paste(qrcode_img)
+        fname = f'qr-code-{self.billId}.png'
+        buffer = BytesIO()
+        canvas.save(buffer,'PNG')
+        self.qr_code.save(fname, File(buffer), save=False)
+        canvas.close()
+        super().save(*args, **kwargs)
+
+
 
 
 
