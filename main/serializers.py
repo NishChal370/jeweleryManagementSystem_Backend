@@ -23,7 +23,7 @@ class AdminSerilizer(serializers.ModelSerializer):
     class Meta:
         model = User
         # fields = '__all__'
-        fields = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'phone', 'register_date','pan_number')
+        fields = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'phone', 'register_date','pan_number', 'profileImage')
 
 
 

@@ -33,7 +33,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import generics
 from .serializers import ChangePasswordSerializer
 from rest_framework.permissions import IsAuthenticated   
-
+from rest_framework.decorators import parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 
 ##Create your views here.
 def index(response):
@@ -61,6 +62,7 @@ def getAdminDetail(request):
 
 
 @api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
 def updateAdminDetail(request):
     oldData = User.objects.get(id=1)
     serializer = AdminSerilizer(instance=oldData, data=request.data)

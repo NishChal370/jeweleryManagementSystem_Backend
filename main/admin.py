@@ -50,7 +50,7 @@ class StaffWorkDisplay(admin.ModelAdmin):
 
 
 class UserDisplay(admin.ModelAdmin):
-    list_display = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'phone', 'register_date', 'pan_number')
+    list_display = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'phone', 'register_date', 'pan_number', 'profileImage')
 
 
 

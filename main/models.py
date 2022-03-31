@@ -20,10 +20,14 @@ from io import BytesIO
 from django.core.files import File
 from PIL import Image, ImageDraw
 
+def upload_to(instance, filename):
+      return 'adminImage/{filename}'.format(filename=filename)
+
 class User(AbstractUser):
     full_name = models.CharField(max_length=30, null=True, blank=True)
     pan_number = models.FloatField(null=True, blank = True)
     phone = models.FloatField(null=True, blank = True)
+    profileImage = models.ImageField(upload_to=upload_to, null=True, blank=True)
     register_date = models.DateField(null=True, blank=True)
 
 
@@ -108,7 +112,7 @@ class Bill(models.Model):
         canvas = Image.new('RGB',(600,600), 'white')
         draw = ImageDraw.Draw(canvas)
         canvas.paste(qrcode_img)
-        fname = f'qr-code-{self.billId}.png'
+        fname = f'qr-code-{str(int(last_bill.billId)+1)}.png'
         buffer = BytesIO()
         canvas.save(buffer,'PNG')
         self.qr_code.save(fname, File(buffer), save=False)
