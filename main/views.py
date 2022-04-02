@@ -42,6 +42,7 @@ def index(response):
 
 
 @api_view(['POST'])
+# @permission_classes(['AllowAny'])
 def LogoutView(request):
     try:
         refresh_token = request.data["refresh_token"]
@@ -183,7 +184,7 @@ def deleteOrder(request, pk):
 ##Generate Order
 @api_view(['POST'])
 def generateOrder(request):
-    print(request.data)
+
     if(Customer.objects.filter(name= request.data['name']).exists()):
         oldCustomer = Customer.objects.get(name= request.data['name'])
         newOrder = PlaceOrderSerilizer(instance= oldCustomer, data= request.data)
@@ -453,20 +454,21 @@ def productList(request):
 ##Generate Bill
 @api_view(['POST'])
 def generateBill(request):
+    if len(Rate.objects.all()) > 0 : #allow only if rate is set first
+        if(Customer.objects.filter(name= request.data['name']).exists()):
+            oldCustomer = Customer.objects.get(name= request.data['name'])
+            newBill = GenerateBillSerilizer(instance= oldCustomer, data= request.data)
+        else:
+            
+            newBill = GenerateBillSerilizer(data= request.data)
 
-    if(Customer.objects.filter(name= request.data['name']).exists()):
-        oldCustomer = Customer.objects.get(name= request.data['name'])
-        newBill = GenerateBillSerilizer(instance= oldCustomer, data= request.data)
+        if newBill.is_valid():
+            newBill.save()
+            return Response(newBill.data)
+        else:
+            return Response(newBill._errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        
-        newBill = GenerateBillSerilizer(data= request.data)
-
-    if newBill.is_valid():
-        newBill.save()
-        print(newBill.data)
-        return Response(newBill.data)
-    else:
-        return Response(newBill._errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response("Rate is not saved", status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -474,15 +476,18 @@ def generateBill(request):
 #Update Bill
 @api_view(['POST'])
 def billUpdate(request):
-    oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
-    serilizer = UpdateExistingBillSerilizer(instance=oldCustomer, data=request.data)
+    if len(Rate.objects.all()) > 0 : #allow only if rate is set first
+        oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
+        serilizer = UpdateExistingBillSerilizer(instance=oldCustomer, data=request.data)
 
-    if serilizer.is_valid():
-        serilizer.save()
+        if serilizer.is_valid():
+            serilizer.save()
 
-        return Response(serilizer.data)
+            return Response(serilizer.data)
 
-    return Response(serilizer.errors)
+        return Response(serilizer.errors)
+    else:
+        return Response("Rate is not saved", status=status.HTTP_404_NOT_FOUND)
 
 
 
@@ -589,7 +594,11 @@ def getIncrementReport(request):
     this_month_total_bill = len(this_month_bills)
     previous_month_total_bill = len(previous_month_bills)
 
-    bill_increment_percent = ((this_month_total_bill-previous_month_total_bill)/(this_month_total_bill+previous_month_total_bill))*100
+    if ( this_month_total_bill== 0 & previous_month_total_bill==0): # if no bill exist 
+        bill_increment_percent = 0
+    else:
+        bill_increment_percent = ((this_month_total_bill-previous_month_total_bill)/(this_month_total_bill+previous_month_total_bill))*100
+
     #order
     this_month_orders = Order.objects.filter(date__range=[this_month_first_date, this_month_last_date]).all()
     previous_month_orders = Order.objects.filter(date__range=[previous_month_first_date, previous_month_last_date]).all()
@@ -597,7 +606,11 @@ def getIncrementReport(request):
     this_month_total_order = len(this_month_orders)
     previous_month_total_order = len(previous_month_orders)
 
-    order_increment_percent = ((this_month_total_order-previous_month_total_order)/(this_month_total_order+previous_month_total_order))*100
+    if ( this_month_total_order== 0 & this_month_total_order==0): # if no order exist 
+        order_increment_percent = 0
+    else:
+        order_increment_percent = ((this_month_total_order-previous_month_total_order)/(this_month_total_order+previous_month_total_order))*100
+    
     #order
     this_month_staffworks = StaffWork.objects.filter(date__range=[this_month_first_date, this_month_last_date]).all()
     previous_month_staffworks = StaffWork.objects.filter(date__range=[previous_month_first_date, previous_month_last_date]).all()
@@ -605,7 +618,10 @@ def getIncrementReport(request):
     this_month_total_staffwork = len(this_month_staffworks)
     previous_month_total_staffwork = len(previous_month_staffworks)
 
-    staffwork_increment_percent = ((this_month_total_staffwork-previous_month_total_staffwork)/(this_month_total_staffwork+previous_month_total_staffwork))*100
+    if ( this_month_total_staffwork== 0 & previous_month_total_staffwork==0): # if no staff exist 
+        staffwork_increment_percent = 0
+    else:
+        staffwork_increment_percent = ((this_month_total_staffwork-previous_month_total_staffwork)/(this_month_total_staffwork+previous_month_total_staffwork))*100
 
     report={ 'bill':{'total':this_month_total_bill, 'increment':str(int(round(bill_increment_percent)))+'%'},
             'order':{'total':this_month_total_order, 'increment':str(int(round(order_increment_percent)))+'%'},
@@ -724,7 +740,7 @@ def getRateReport(request):
             if len(week)>1:
                 serilizer = RateSerilizer(Rate.objects.filter(date__range=[week[0], week[1]]), many=True).data
             else:
-                serilizer = RateSerilizer(Rate.objects.filter(date=week[0]), many=True)
+                serilizer = RateSerilizer(Rate.objects.filter(date=week[0]), many=True).data # added .data clz when data is 1 then "TypeError: 'ListSerializer' object is not iterable" occured
 
             if serilizer != []:
                 tajabiRateTotal = 0.0

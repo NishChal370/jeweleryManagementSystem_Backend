@@ -106,13 +106,17 @@ class Bill(models.Model):
 
     def save(self, *args, **kwargs):
         customer = Customer.objects.get(customerId = self.customerId.customerId)
-        last_bill = Bill.objects.all().order_by('-billId')[:1][0]
-        data = f'''Invoice no = {str(int(last_bill.billId)+1)} \nName = {customer.name} \nDate = {self.date} \nBill Type = {self.billType} \nTotal Amount = {self.grandTotalAmount} \nAdvance = {self.advanceAmount} \nremainingAmount = {self.remainingAmount}'''
+        print(len(Bill.objects.all()))
+        last_bill = Bill.objects.all().order_by('-billId')[:1][0] if len(Bill.objects.all())>0 else 1
+        bill_id = int(last_bill.billId)+1 if len(Bill.objects.all())>0 else last_bill
+        # data = f'''Invoice no = {str(int(last_bill.billId)+1)} \nName = {customer.name} \nDate = {self.date} \nBill Type = {self.billType} \nTotal Amount = {self.grandTotalAmount} \nAdvance = {self.advanceAmount} \nremainingAmount = {self.remainingAmount}'''
+        data = f'''Invoice no = {str(bill_id)} \nName = {customer.name} \nDate = {self.date} \nBill Type = {self.billType} \nTotal Amount = {self.grandTotalAmount} \nAdvance = {self.advanceAmount} \nremainingAmount = {self.remainingAmount}'''
         qrcode_img = qrcode.make(data)
         canvas = Image.new('RGB',(600,600), 'white')
         draw = ImageDraw.Draw(canvas)
         canvas.paste(qrcode_img)
-        fname = f'qr-code-{str(int(last_bill.billId)+1)}.png'
+        # fname = f'qr-code-{str(int(last_bill.billId)+1)}.png'
+        fname = f'qr-code-{str(bill_id)}.png'
         buffer = BytesIO()
         canvas.save(buffer,'PNG')
         self.qr_code.save(fname, File(buffer), save=False)
