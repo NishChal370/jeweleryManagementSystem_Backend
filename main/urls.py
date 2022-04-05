@@ -72,7 +72,7 @@ urlpatterns = [
     path('rates/', views.getAllRates, name='rates-list'),
     path('rate-set/', views.setRate, name='rate-set'),
     path('rate/<str:date>', views.getRateByDate, name='rate-by-date'),
-    path('rate-update/<int:pk>', views.updateTodaysRate, name='rate-update'),
+    path('rate-update/<int:pk>', views.updateTodaysRate, name='rate-update'), # not in use now
     path('rate/report/', views.getRateReport, name='rate-report'),
 
     #orderProduct
@@ -82,7 +82,7 @@ urlpatterns = [
     #Staff
     path('staff/', views.getStaffDetail, name='staff-detail'),
     path('staff/<int:pk>',views.getStaffbyId, name='staff-by-id'),
-    path('staff-update/<int:pk>',views.updateStaffById, name='staff-update-by-id'),
+    path('staff-update/<int:pk>',views.updateStaffById, name='staff-update-by-id'),#not in use
     path('staff/register/', views.registerStaff, name='staff-register'),
     path('staff/name/', views.getStaffNameList, name="staffs-name-list"),
     path('staff/work/', views.getStaffWorkDetail, name='staff-work'),

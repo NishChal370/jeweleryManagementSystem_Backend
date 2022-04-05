@@ -1,33 +1,33 @@
 
-from ast import Return
-from itertools import product
-from math import e
-from sqlite3 import Date
+# from ast import Return
+# from itertools import product
+# from math import e
+# from sqlite3 import Date
 # import datetime
-from traceback import print_tb
-from unicodedata import name
-from django.utils.timezone import now
-from webbrowser import get
-from threading import main_thread
+# from traceback import print_tb
+# from unicodedata import name
+# from django.utils.timezone import now
+# from webbrowser import get
+# from threading import main_thread
 #Q objects that allow to complex lookups.
 from django.db.models import Q
 from django.http.response import HttpResponse
 from rest_framework.response import Response
 from rest_framework import serializers, status
-from rest_framework.decorators import api_view,  permission_classes
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate, login, logout
+from rest_framework.decorators import api_view #,  permission_classes
+# from rest_framework.permissions import AllowAny
+# from django.contrib.auth import authenticate, login, logout
 from rest_framework.pagination import PageNumberPagination
 # from django.core.mail import send_mail
 from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork, User
-from main.serializers import AdminSerilizer, BillDetailSerilizer, BillInfoSerilizer, BillProductInfoSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer, send_Email
+from main.serializers import AdminSerilizer, BillDetailSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer #, send_Email, BillInfoSerilizer, BillProductInfoSerilizer
 
-from django.utils import timezone
+# from django.utils import timezone
 import calendar
 from datetime import date, datetime, timedelta
 
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.csrf import ensure_csrf_cookie
+# from django.views.decorators.csrf import csrf_exempt
+# from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework import generics
@@ -244,6 +244,7 @@ def orderListSummary(request):
     type = request.GET.get('type') # Query param
     status = request.GET.get('status')
     customerInfo = request.GET.get('customerInfo')
+    report = request.GET.get('report')
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
@@ -261,8 +262,10 @@ def orderListSummary(request):
         orders = Order.objects.all()
 
     if date != 'None':
-        # orders = orders.filter(submittionDate__range = [date, datetime.datetime.now().date()])
-        orders = orders.filter(submittionDate__gte = date).order_by('submittionDate')
+        if report == 'Today':
+            orders = orders.filter(submittionDate = date).order_by('submittionDate')
+        else:
+            orders = orders.filter(submittionDate__gte = date).order_by('submittionDate')
 
     if type != 'all':
         orders = orders.filter(type= type)
@@ -594,7 +597,7 @@ def getIncrementReport(request):
     this_month_total_bill = len(this_month_bills)
     previous_month_total_bill = len(previous_month_bills)
 
-    if ( this_month_total_bill== 0 & previous_month_total_bill==0): # if no bill exist 
+    if (this_month_total_bill+previous_month_total_bill == 0 ): # if no bill exist 
         bill_increment_percent = 0
     else:
         bill_increment_percent = ((this_month_total_bill-previous_month_total_bill)/(this_month_total_bill+previous_month_total_bill))*100
@@ -606,7 +609,7 @@ def getIncrementReport(request):
     this_month_total_order = len(this_month_orders)
     previous_month_total_order = len(previous_month_orders)
 
-    if ( this_month_total_order== 0 & this_month_total_order==0): # if no order exist 
+    if ( this_month_total_order+previous_month_total_order == 0 ): # if no order exist 
         order_increment_percent = 0
     else:
         order_increment_percent = ((this_month_total_order-previous_month_total_order)/(this_month_total_order+previous_month_total_order))*100
@@ -618,7 +621,7 @@ def getIncrementReport(request):
     this_month_total_staffwork = len(this_month_staffworks)
     previous_month_total_staffwork = len(previous_month_staffworks)
 
-    if ( this_month_total_staffwork== 0 & previous_month_total_staffwork==0): # if no staff exist 
+    if ( this_month_total_staffwork+previous_month_total_staffwork == 0): # if no staff exist 
         staffwork_increment_percent = 0
     else:
         staffwork_increment_percent = ((this_month_total_staffwork-previous_month_total_staffwork)/(this_month_total_staffwork+previous_month_total_staffwork))*100
@@ -928,13 +931,16 @@ def getStaffWorkDetail(request):
     staffInfo = request.GET.get('staffInfo')
     workStatus = request.GET.get('workStatus')
     submittionDate = request.GET.get('submittionDate')
+    report = request.GET.get('report')
 
     paginator = PageNumberPagination()
     paginator.page_size = 21
 
     if submittionDate != '':
-
-        staffWork = StaffWork.objects.filter(submittionDate__gte = submittionDate).order_by('submittionDate').all()
+        if report == 'Today':
+            staffWork = StaffWork.objects.filter(submittionDate = submittionDate).order_by('submittionDate').all()
+        else:
+            staffWork = StaffWork.objects.filter(submittionDate__gte = submittionDate).order_by('submittionDate').all()
     else:
         staffWork = StaffWork.objects.all()
 
