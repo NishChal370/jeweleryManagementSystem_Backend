@@ -1,4 +1,5 @@
 from datetime import date
+from tarfile import NUL
 from django.urls import reverse
 from rest_framework import status
 from asyncio.windows_events import NULL
@@ -22,8 +23,8 @@ class TestStaff(APITestCase):
                   email = "np01cp4a190072@islingtoncollege.edu.np"
             )
             rate = Rate.objects.create(
-                  hallmarkRate = 90000, 
-                  tajabiRate = 89000, 
+                  hallmarkRate = 90000,
+                  tajabiRate = 89000,
                   silverRate = 1600
             )
             order = Order.objects.create(
@@ -65,14 +66,14 @@ class TestStaff(APITestCase):
                   # submittedDate = NULL,
                   status = 'inprogress',
             )
-      
+
       def test_get_Staff_detail(self):
             authenticate(self)
 
             response = self.client.get(reverse('staff-detail'))
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(response.data, dict)
-      
+
       def test_get_staff_by_id(self):
             authenticate(self)
 
@@ -98,6 +99,7 @@ class TestStaff(APITestCase):
             self.assertTrue(response.data[0]['staffName'],'Rohan')
             self.assertTrue(response.data[0]['email'],'rohan123@gmail.com')
 
+      #done
       def test_register_staff(self):
             authenticate(self)
 
@@ -112,7 +114,7 @@ class TestStaff(APITestCase):
             response = self.client.post(reverse('staff-register'),data)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertTrue(response.data['email'],'Enter a valid email address.')
-            
+
 
             data ={
                   "staffName": "rohan",
@@ -124,9 +126,22 @@ class TestStaff(APITestCase):
 
             response = self.client.post(reverse('staff-register'),data)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data[1]['staffId'],2)
 
             data ={
+                  "staffName": "rohan",
+                  "address": "Baglung",
                   "phone": "9884768698",
+                  "email": 'rohan@gmail.com',
+                  "registrationDate": "2022-02-15"
+            }
+
+            response = self.client.post(reverse('staff-register'),data)
+            self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+            self.assertTrue(response.data,'rohan is already registed !!')
+
+            data ={
+                  "phone": "9884768986",
                   "email": 'rohan@gmail.com',
                   "registrationDate": "2022-02-15"
             }
@@ -135,14 +150,14 @@ class TestStaff(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertTrue(response.data['address'][0],'This field is required')
             self.assertTrue(response.data['staffName'][0],'This field is required')
-            
+
       def test_get_staff_name_list(self):
             authenticate(self)
             # get all staff name list
             response = self.client.get(reverse('staffs-name-list'))
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(response.data, list)
-      
+
       def test_get_staff_work_detail(self):
             authenticate(self)
 
@@ -183,7 +198,28 @@ class TestStaff(APITestCase):
             self.assertTrue(response.data, dict)
             self.assertTrue(response.data['submittionDate'], "2022-04-04")
             self.assertTrue(response.data['finalProductWeight'], 13)
-                        
+
+      #done
+      def test_update_staff_work(self):
+            authenticate(self)
+            data ={
+                  'KDMWeight': 1,
+                  "date": "2022-04-04",
+                  "finalProductWeight": NULL,
+                  "givenWeight": 12,
+                  "lossWeight": 0,
+                  "orderProduct": 1,
+                  "staff": 1,
+                  "staffWorkId": 1,
+                  "status": "inprogress",
+                  "submittedWeight": NULL,
+                  "submittionDate": "2022-04-04",
+                  "totalWeight": 13,
+            }
+            response = self.client.post(reverse('staff-work-assign'), data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data, dict)
+            self.assertTrue(response.data['date'], "2022-04-04")
 
       def test_delete_staff_by_id(self):
             authenticate(self)
@@ -191,3 +227,67 @@ class TestStaff(APITestCase):
             response = self.client.delete('/api/staff/delete/1')
             self.assertEqual(response.status_code, status.HTTP_428_PRECONDITION_REQUIRED)
             self.assertTrue(response.data, 'ankit have work to complete')
+
+            #update staff work and then submit
+            data ={
+                  'KDMWeight': 1,
+                  "date": "2022-04-04",
+                  "finalProductWeight": 13,
+                  "givenWeight": 12,
+                  "lossWeight": 0,
+                  "orderProduct": 1,
+                  "staff": 1,
+                  "staffWorkId": 1,
+                  "status": "inprogress",
+                  "submittedDate": "2022-04-04",
+                  "submittedWeight": 13,
+                  "submittionDate": "2022-04-04",
+                  "totalWeight": 13,
+            }
+            response = self.client.post(reverse('staff-work-assign'), data)
+
+            response = self.client.delete('/api/staff/delete/1')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data, 'Ankit deregisted sucessfully !!')
+
+      def test_assign_work(self):
+            authenticate(self)
+            data ={
+                  'KDMWeight': 1,
+                  "date": "2022-04-04",
+                  "finalProductWeight": 13,
+                  "givenWeight": 12,
+                  "lossWeight": 0,
+                  "orderProduct": 1,
+                  "staff": 1,
+                  "staffWorkId": 1,
+                  "status": "inprogress",
+                  "submittedDate": "2022-04-04",
+                  "submittedWeight": 13,
+                  "submittionDate": "2022-04-04",
+                  "totalWeight": 13,
+            }
+            response = self.client.post(reverse('staff-work-assign'), data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data, dict)
+
+      def test_assign_work_empty(self):
+            authenticate(self)
+            data ={
+                  'KDMWeight': 1,
+                  "date": "2022-04-04",
+                  "finalProductWeight": 13,
+                  "givenWeight": 12,
+                  "lossWeight": 0,
+                  "orderProduct": 1,
+                  "staffWorkId": 1,
+                  "status": "inprogress",
+                  "submittedDate": "2022-04-04",
+                  "submittedWeight": 13,
+                  "submittionDate": "2022-04-04",
+                  "totalWeight": 13,
+            }
+            response = self.client.post(reverse('staff-work-assign'), data)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            self.assertTrue(response.data, "Staff id not found")
+

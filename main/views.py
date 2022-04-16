@@ -335,6 +335,7 @@ def billsListSummmary(request):
     billType = request.GET.get('billType') # Query param
     billDate = request.GET.get('billDate')
     billStatus = request.GET.get('billStatus')
+    paymentStatus = request.GET.get('paymentStatus')
     # nowDate = datetime.datetime.now().date()
     nowDate = datetime.now().date()
 
@@ -345,6 +346,12 @@ def billsListSummmary(request):
         bills = Bill.objects.filter(date__range = [billDate, nowDate]) #.order_by('-date', '-billId')
     else:
         bills =Bill.objects.all().order_by('-date', '-billId')
+
+
+    if paymentStatus == 'remain':
+        bills = bills.filter(remainingAmount__gte = 1)
+    elif paymentStatus == 'payed':
+        bills = bills.filter(remainingAmount__lt = 1)
 
     if billType != 'all': # fiter by bill type {gold, silver}
         bills = bills.filter(billType = billType) #.order_by('-date', '-billId')
@@ -372,6 +379,8 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     billType = request.GET.get('billType') # Query param
     billDate = request.GET.get('billDate')
     billStatus = request.GET.get('billStatus')
+    paymentStatus = request.GET.get('paymentStatus')
+
     nowDate = datetime.now().date()
 
     paginator = PageNumberPagination()
@@ -402,6 +411,11 @@ def getBillSummaryByCustomerInfo(request, searchValue):
         searchedBills = searchedBills.filter(status = billStatus)
     else:
         searchedBills = searchedBills.order_by('-date', '-billId')
+
+    if paymentStatus == 'remain':
+        searchedBills = searchedBills.filter(remainingAmount__gte = 1)
+    elif paymentStatus == 'payed':
+        searchedBills = searchedBills.filter(remainingAmount__lt = 1)
 
     result_page = paginator.paginate_queryset(searchedBills, request)
 
@@ -850,9 +864,11 @@ def getStaffNameList(request):
 @api_view(['POST'])
 def registerStaff(request):
     if(Staff.objects.filter(phone= request.data['phone']).exists()):
-        oldStaff = Staff.objects.get(phone= request.data['phone'])
 
-        newStaff = StaffSerilizer(instance=oldStaff, data=request.data)
+        return Response(request.data['staffName']+' is already registed !!', status.HTTP_406_NOT_ACCEPTABLE)
+        # oldStaff = Staff.objects.get(phone= request.data['phone'])
+
+        # newStaff = StaffSerilizer(instance=oldStaff, data=request.data)
     else:
         newStaff = StaffSerilizer(data= request.data)
 

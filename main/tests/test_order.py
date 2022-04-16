@@ -47,7 +47,7 @@ class TestOrder(APITestCase):
             self.assertEqual(type(response.data[0]['orders']), list)
             self.assertTrue('orderProducts' in response.data[0]['orders'][0])
             self.assertTrue('product' in response.data[0]['orders'][0]['orderProducts'][0])
-      
+      #done
       def test_place_order(self):
             authenticate(self)
 
@@ -80,7 +80,7 @@ class TestOrder(APITestCase):
             self.assertTrue('orders' in response.data)
             self.assertTrue('orderProducts' in response.data['orders'][1])
             self.assertTrue('product' in response.data['orders'][1]['orderProducts'][0])
-
+      #done
       def test_place_order_without_order(self):
             authenticate(self)
 
@@ -94,7 +94,7 @@ class TestOrder(APITestCase):
             response = self.client.post('/api/place-order/', data, format='json')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(response.data['message'][0], 'Order is missing.')
-
+      #done
       def test_update_order(self):
             authenticate(self)
 
@@ -130,7 +130,81 @@ class TestOrder(APITestCase):
             response = self.client.post('/api/order/update', data, format='json')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(response.data['orders'][0]['rate'], 90000)
-            self.assertTrue('product' in response.data['orders'][0]['orderProducts'][0])       
+            self.assertTrue('product' in response.data['orders'][0]['orderProducts'][0]) 
+      #done
+      def test_update_submitted_order(self):
+            authenticate(self)
+
+            todays_gold_rate = Rate.objects.get(date= date.today()).hallmarkRate
+            data ={
+                  'customerId' : 1,
+                  'name' : "Hari",
+                  'address' : "nepal",
+                  'phone' : "9805169542",
+                  'email' : "np01cp4a190072@islingtoncollege.edu.np",
+                  'orders' :[{
+                        'orderId' : 1,
+                        'date' : date.today(),
+                        'submittionDate' : "2022-04-06",
+                        'submittedDate' : "2022-04-06",
+                        'type' : 'gold',
+                        'rate': todays_gold_rate,
+                        'status' : 'submitted',
+                        'orderProducts':[{
+                              'orderProducts' : 1,
+                              'status' :'submitted',
+                              'product':{
+                                    'productId':2,
+                                    'productName' : 'earring',
+                                    'netWeight' : 30,
+                                    'gemsName' : 'mooti',
+                                    'gemsPrice' : 4000
+                              }
+                        }]
+
+                  }]
+            }
+
+            response = self.client.post('/api/order/update', data, format='json')
+            self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertTrue(response.data, 'Order already submitted')   
+      #done
+      def test_update_inprogress_order(self):
+            authenticate(self)
+
+            todays_gold_rate = Rate.objects.get(date= date.today()).hallmarkRate
+            data ={
+                  'customerId' : 1,
+                  'name' : "Hari",
+                  'address' : "nepal",
+                  'phone' : "9805169542",
+                  'email' : "np01cp4a190072@islingtoncollege.edu.np",
+                  'orders' :[{
+                        'orderId' : 1,
+                        'date' : date.today(),
+                        'submittionDate' : "2022-04-06",
+                        'submittedDate' : "2022-04-06",
+                        'type' : 'gold',
+                        'rate': todays_gold_rate,
+                        'status' : 'inprogress',
+                        'orderProducts':[{
+                              'orderProducts' : 1,
+                              'status' :'inprogress',
+                              'product':{
+                                    'productId':2,
+                                    'productName' : 'earring',
+                                    'netWeight' : 30,
+                                    'gemsName' : 'mooti',
+                                    'gemsPrice' : 4000
+                              }
+                        }]
+
+                  }]
+            }
+
+            response = self.client.post('/api/order/update', data, format='json')
+            self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertTrue(response.data, 'Order inprogress')
 
       def test_delete_order_by_id(self):
             authenticate(self)
@@ -138,8 +212,8 @@ class TestOrder(APITestCase):
             response = self.client.delete('/api/order-delete/1')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(response.data, {'Order 1 is deleted'})       
-
-      def test_get_order_summmary(self):
+      #done
+      def test_get_order_summary(self):
             authenticate(self)
             # by date
             response = self.client.get('/api/orders/summary/?customerInfo=None&type=all&status=all&date=2022-04-04&page=1') 
@@ -153,6 +227,10 @@ class TestOrder(APITestCase):
             response = self.client.get('/api/orders/summary/?customerInfo=None&type=gold&status=all&date=None&page=1') 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(response.data['results'][0]['type'], 'gold') 
+            # not found
+            response = self.client.get('/api/orders/summary/?customerInfo=None&type=silver&status=all&date=None&page=1') 
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data['results'], []) 
 
       def test_get_by_id(self):
             authenticate(self)

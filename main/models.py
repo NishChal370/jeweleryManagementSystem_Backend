@@ -8,7 +8,7 @@ from django.core.mail import EmailMultiAlternatives
 
 import datetime
 from django.utils.timezone import now
-
+from django.utils import timezone
 
 from django.dispatch import receiver
 from django_rest_passwordreset.signals import reset_password_token_created
@@ -176,7 +176,7 @@ class OrderProduct(models.Model):
 
 class Rate(models.Model):
     rateId = models.AutoField(primary_key=True, null=False)
-    date = models.DateField(null=True, blank=True, default=datetime.date.today())
+    date = models.DateField(null=True, blank=True, default=datetime.date.today()) #datetime.date.today()
     hallmarkRate = models.FloatField(null=False)
     tajabiRate = models.FloatField(null=False)
     silverRate = models.FloatField(null=False)
@@ -191,7 +191,7 @@ class Staff(models.Model):
     address = models.CharField(max_length=50, null=False)
     phone = models.CharField(max_length=10, null=True , blank=True)
     email = models.EmailField(max_length=50, null=True, blank=True)
-    registrationDate = models.DateField(null=True, blank=True, default=datetime.date.today())
+    registrationDate = models.DateField(null=True, blank=True, default=datetime.date.today()) #datetime.date.today()
     resignDate = models.DateField(null=True, blank=True)
 
     def __str__(self):
@@ -207,7 +207,7 @@ class StaffWork(models.Model):
     staffWorkId = models.AutoField(primary_key=True,null=False)
     staff = models.ForeignKey(Staff, null=False, on_delete=CASCADE, related_name='staffwork')
     orderProduct = models.ForeignKey(OrderProduct, null=False, on_delete=CASCADE, related_name='orderProduct')
-    date = models.DateField(null=True, blank=True, default=datetime.date.today())
+    date = models.DateField(null=True, blank=True, default=datetime.date.today()) #datetime.date.today()
     givenWeight = models.FloatField(null=False)
     KDMWeight = models.FloatField(null=False)
     totalWeight = models.FloatField(null=False)

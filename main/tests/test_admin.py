@@ -25,7 +25,7 @@ class TestAdmin(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(response.data['full_name'], 'Nirmal')
             self.assertTrue(response.data['register_date'], date.today())
-      
+      #done
       def test_update_admin(self):
             authenticate(self)
 
@@ -49,7 +49,7 @@ class TestAdmin(APITestCase):
             self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertTrue(response.data, 'invalid phone data type')
 
-
+      #done
       def test_change_password(self):
             authenticate(self)
 

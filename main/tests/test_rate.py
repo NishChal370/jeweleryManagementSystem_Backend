@@ -57,9 +57,9 @@ class TestRate(APITestCase):
             response = self.client.get('/api/rate/')
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-            response = self.client.get('/api/rate/2022-04-05')
+            response = self.client.get('/api/rate/2022-04-11') #date change (today date rakhni)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertTrue(response.data['date'], '2022-04-04')
+            self.assertTrue(response.data['date'], '2022-04-11') #date change (today date rakhni)
             self.assertTrue('date' in response.data)
             self.assertTrue('tajabiRate' in response.data)
             self.assertTrue('silverRate' in response.data)
