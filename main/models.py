@@ -1,5 +1,4 @@
 from asyncio.windows_events import NULL
-import email
 from turtle import mode
 from django.db import models
 from django.db.models.base import Model
@@ -8,11 +7,9 @@ from django.core.mail import EmailMultiAlternatives
 
 import datetime
 from django.utils.timezone import now
-from django.utils import timezone
 
 from django.dispatch import receiver
 from django_rest_passwordreset.signals import reset_password_token_created
-from django.core.mail import send_mail  
 from django.contrib.auth.models import AbstractUser
 
 import qrcode
@@ -109,13 +106,11 @@ class Bill(models.Model):
         print(len(Bill.objects.all()))
         last_bill = Bill.objects.all().order_by('-billId')[:1][0] if len(Bill.objects.all())>0 else 1
         bill_id = int(last_bill.billId)+1 if len(Bill.objects.all())>0 else last_bill
-        # data = f'''Invoice no = {str(int(last_bill.billId)+1)} \nName = {customer.name} \nDate = {self.date} \nBill Type = {self.billType} \nTotal Amount = {self.grandTotalAmount} \nAdvance = {self.advanceAmount} \nremainingAmount = {self.remainingAmount}'''
         data = f'''Invoice no = {str(bill_id)} \nName = {customer.name} \nDate = {self.date} \nBill Type = {self.billType} \nTotal Amount = {self.grandTotalAmount} \nAdvance = {self.advanceAmount} \nremainingAmount = {self.remainingAmount}'''
         qrcode_img = qrcode.make(data)
         canvas = Image.new('RGB',(600,600), 'white')
         draw = ImageDraw.Draw(canvas)
         canvas.paste(qrcode_img)
-        # fname = f'qr-code-{str(int(last_bill.billId)+1)}.png'
         fname = f'qr-code-{str(bill_id)}.png'
         buffer = BytesIO()
         canvas.save(buffer,'PNG')
@@ -191,7 +186,7 @@ class Staff(models.Model):
     address = models.CharField(max_length=50, null=False)
     phone = models.CharField(max_length=10, null=True , blank=True)
     email = models.EmailField(max_length=50, null=True, blank=True)
-    registrationDate = models.DateField(null=True, blank=True, default=datetime.date.today()) #datetime.date.today()
+    registrationDate = models.DateField(null=True, blank=True, default=now) #datetime.date.today()
     resignDate = models.DateField(null=True, blank=True)
 
     def __str__(self):
@@ -207,7 +202,7 @@ class StaffWork(models.Model):
     staffWorkId = models.AutoField(primary_key=True,null=False)
     staff = models.ForeignKey(Staff, null=False, on_delete=CASCADE, related_name='staffwork')
     orderProduct = models.ForeignKey(OrderProduct, null=False, on_delete=CASCADE, related_name='orderProduct')
-    date = models.DateField(null=True, blank=True, default=datetime.date.today()) #datetime.date.today()
+    date = models.DateField(null=True, blank=True, default=now) #datetime.date.today()
     givenWeight = models.FloatField(null=False)
     KDMWeight = models.FloatField(null=False)
     totalWeight = models.FloatField(null=False)

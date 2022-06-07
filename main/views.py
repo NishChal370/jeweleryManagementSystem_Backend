@@ -1,33 +1,16 @@
-
-# from ast import Return
-# from itertools import product
-# from math import e
-# from sqlite3 import Date
-# import datetime
-# from traceback import print_tb
-# from unicodedata import name
-# from django.utils.timezone import now
-# from webbrowser import get
-# from threading import main_thread
-#Q objects that allow to complex lookups.
+from re import S
 from django.db.models import Q
 from django.http.response import HttpResponse
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view #,  permission_classes
-# from rest_framework.permissions import AllowAny
-# from django.contrib.auth import authenticate, login, logout
 from rest_framework.pagination import PageNumberPagination
-# from django.core.mail import send_mail
 from main.models import BillProduct, Customer, Order, Bill, OrderProduct, Product, Rate, Staff, StaffWork, User
 from main.serializers import AdminSerilizer, BillDetailSerilizer, BillSearchSerilizer, BillSerilizer, CustomerInfoSerilizer, CustomerOrderSerilizer, CustomerSerilizer, GenerateBillSerilizer, OrderBillSerilizer, OrderProductSerilizer, OrderSearchSerilizer, OrderSerilizer, PlaceOrderSerilizer, ProductSerilizer, RateSerilizer, StaffAssignWorkSerilizer, StaffSerilizer, StaffWorkDetailSerilizer, UpdateExistingBillSerilizer, UpdateOrderSerilizer #, send_Email, BillInfoSerilizer, BillProductInfoSerilizer
 
-# from django.utils import timezone
 import calendar
 from datetime import date, datetime, timedelta
 
-# from django.views.decorators.csrf import csrf_exempt
-# from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework import generics
@@ -42,7 +25,6 @@ def index(response):
 
 
 @api_view(['POST'])
-# @permission_classes(['AllowAny'])
 def LogoutView(request):
     try:
         refresh_token = request.data["refresh_token"]
@@ -164,20 +146,6 @@ def deleteOrder(request, pk):
             return Response({"Order "+str(order.orderId)+" is deleted !!"}, status=status.HTTP_200_OK)
     except:
         return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
-
-
-
-##Post orders
-# # @api_view(['POST'])
-# # def placeOrder(request):
-# #     newOrder = OrderSerilizer(data= request.data)
-
-# #     if newOrder.is_valid():
-# #         newOrder.save()
-
-# #         return Response(newOrder.data)
-# #     else:
-# #         return Response(newOrder.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -303,9 +271,7 @@ def orderProductsDetail(request, pk):
 @api_view(['GET'])
 def pendingOrderProductDetail(request,orderId):
     try:
-        # orderProducts = Order.objects.get(orderProductId = pk)
-        # # orders = Order.objects.filter(status='pending').get(orderId=pk)
-        # # serializer = OrderSerilizer(orders, many=False)
+
         orderProducts = OrderProduct.objects.filter(orderId = orderId).filter(status='pending')
         serializer = OrderProductSerilizer(orderProducts, many=True)
         if len(serializer.data) >0:
@@ -384,7 +350,7 @@ def getBillSummaryByCustomerInfo(request, searchValue):
     nowDate = datetime.now().date()
 
     paginator = PageNumberPagination()
-    paginator.page_size = 10
+    paginator.page_size = 21
     searchCustomer = Customer.objects.filter(Q(name__icontains=searchValue) | Q(address__icontains=searchValue) | Q(phone__icontains=searchValue)) # __icontains  it make case insentive
 
     billsIdList = []
@@ -560,7 +526,7 @@ def getSalesReport(request):
 
     for week in getWeekStartAndEndDate(selected_date):
         week_number += 1
-        if week[0]<date.today():
+        if week[0]<=date.today():
             if len(week)>1:
                 weekly_bills = Bill.objects.filter(date__range=[week[0], week[1]]).all()
             else:
@@ -667,9 +633,9 @@ def getAllRates(request):
 @api_view(['POST'])
 def setRate(request):
     existingRate = Rate.objects.filter(date= datetime.now())
-    # existingRate = Rate.objects.filter(date= datetime.datetime.now())
+
     if(existingRate.exists()):
-        # oldRate = Rate.objects.get(date= datetime.datetime.now())
+
         oldRate = Rate.objects.get(date= datetime.now())
         newRate = RateSerilizer(instance= oldRate, data= request.data)
     else:
@@ -736,7 +702,6 @@ def getRateReport(request):
         todays_day_index =datetime.today().isoweekday()
 
         week_start_date = datetime.today() - timedelta(days= todays_day_index) if todays_day_index != 7 else datetime.today()
-        # week_start_date = datetime.today() - timedelta(days= dayIndex[todays_day_index])
         week_end_date = week_start_date + timedelta(days=6)
 
         rates = Rate.objects.filter(date__range=[week_start_date, week_end_date])
@@ -866,9 +831,6 @@ def registerStaff(request):
     if(Staff.objects.filter(phone= request.data['phone']).exists()):
 
         return Response(request.data['staffName']+' is already registed !!', status.HTTP_406_NOT_ACCEPTABLE)
-        # oldStaff = Staff.objects.get(phone= request.data['phone'])
-
-        # newStaff = StaffSerilizer(instance=oldStaff, data=request.data)
     else:
         newStaff = StaffSerilizer(data= request.data)
 
@@ -1065,213 +1027,3 @@ class ChangePasswordView(generics.UpdateAPIView):
             return Response(response)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-'''@api_view(['DELETE'])
-def deleteStaffById(request, pk):
-    try:
-        staff = Staff.objects.get(staffId=pk)
-        staff.delete()
-
-        staff = Staff.objects.all()
-
-        staff = StaffSerilizer(staff, many=True)
-
-        return Response(staff.data)
-    except:
-        return Response({"message" : "Not Found !!"}, status=status.HTTP_404_NOT_FOUND)
-'''
-
-'''
-#######class base pagination
-from rest_framework.pagination import PageNumberPagination
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 1
-    page_size_query_param = 'page_size'
-    max_page_size = 2
-
-from rest_framework import generics
-class billsList(generics.ListAPIView):
-    queryset = Bill.objects.all()
-    serializer_class = BillSerilizer
-    pagination_class = StandardResultsSetPagination'''
-
-'''
-####function base pagination
-from rest_framework.pagination import PageNumberPagination
-
-#Get all bills
-@api_view(['GET'])
-def billsList(request):
-    paginator = PageNumberPagination()
-    paginator.page_size = 1
-    bills = Bill.objects.all()
-    result_page = paginator.paginate_queryset(bills, request)
-    serializer = BillSerilizer(result_page, many=True)
-
-    return paginator.get_paginated_response(serializer.data)
-'''
-
-
-
-
-##-------------------------------------->>>>>
-# @api_view(['POST'])
-# def billUpdate(request):
-#     customer = request.data
-#     bill = customer.pop('bills')[0]
-#     updatingBillId = bill['billId']
-#     updatedCustomer = Customer.objects.filter(customerId= customer['customerId']).update(**customer)
-
-#     billProductList = bill.pop('billProduct')
-#     updatedBill = Bill.objects.filter(billId= bill['billId']).update(**bill)
-#     print(updatedBill)
-#     # # bill = Bill.objects.get(billId=updatedBill)
-#     bill = Bill.objects.filter(billId=updatingBillId).first()
-#     print("Ccccc")
-#     print(updatedBill)
-#     print(bill)
-#     print("Ccccc")
-#     lis = []
-#     for billProduct in billProductList:
-#         print("In")
-#         product = billProduct.pop('product')
-
-#         if "billProductId" not in  billProduct:
-#             # add product for existing customer
-#             newProduct = Product.objects.create(**product)
-
-#             # add billProduct for existing customer
-
-#             # BillProduct.objects.create(billId=bill, productId=newProduct, **billProduct)
-#             newBillProduct = BillProduct.objects.create(billId=bill, productId=newProduct, **billProduct)
-#         else:
-#             #old product
-#             newProduct = Product.objects.filter(productId = product['productId']).update(**product)
-#             newBillProduct =BillProduct.objects.filter(billProductId = billProduct['billProductId']).update(**billProduct)
-#             print(newBillProduct)
-#         print(updatedBill)
-#         print(updatingBillId)
-#         a = BillProduct.objects.filter(billId = updatingBillId).values_list('billProductId', flat=True)
-
-#         print(a)
-#         print(list(a).__contains__(2))
-#         print("CHEKC")
-#         for b in list(a):
-#             print(list(a))
-#             print(billProduct)
-#         print("DONE")
-
-
-#     #assemblingupdated data in reqd format
-#     updatedBill = BillDetailSerilizer(bill, many=False).data
-#     updatedCustomer = updatedBill.pop('customer')
-#     updatedCustomer['bills'] = updatedBill
-
-#     return Response(updatedCustomer)
-##--------------------------------------<<<
-
-# @api_view(['POST'])
-# def billUpdate(request):
-#     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
-#     updatedBill = UpdateExistingBillSerilizer(instance=request.data['customerId'], data = request.data)
-#     if updatedBill.is_valid():
-#         updatedBill.save()
-
-#     return Response({"Hello"})
-
-# @api_view(['POST'])
-# def billUpdate(request):
-
-#     print(request.data)
-#     print()
-
-#     bill =request.data.pop('bills')[0]
-#     print("CUSTOMER")
-#     print(request.data)
-#     print()
-#     print("BILL")
-#     print(bill)
-#     print()
-
-#     billProducts = bill.pop('billProduct')
-#     print(billProducts)
-#     for billProduct in billProducts:
-#         print("BILLPRODUCT")
-#         print(billProduct)
-#         print()
-#         product = billProduct.pop('product')
-#         print(product)
-#     return Response(request.data)
-
-
-
-# ##Update bill
-# @api_view(['POST'])
-# def billUpdate(request):
-#     data = request.data
-#     bill = data.pop('bills')[0]
-#     #update customer
-#     oldCustomer = Customer.objects.get(customerId= data['customerId'])
-
-#     updatedCustomer = CustomerInfoSerilizer(instance = oldCustomer, data = data)
-#     if updatedCustomer.is_valid():
-#         updatedCustomer.save()
-#     else:
-#         return Response(updatedCustomer.error_messages)
-
-#     billProductList = bill.pop('billProduct')
-#     #update bill
-#     oldBill = Bill.objects.get(billId = bill['billId'])
-
-#     updatedBill = BillInfoSerilizer(instance = oldBill, data = bill)
-#     if updatedBill.is_valid():
-#         updatedBill.save()
-#     else:
-#         return Response(updatedBill.error_messages)
-
-#     print('5')
-#     for billProduct in billProductList:
-#         product = billProduct.pop('product')
-#         print(product)
-#         print(billProduct)
-#         # #update Bill product
-#         # oldBillProduct = BillProduct.objects.get(billProductId = billProduct['billProductId'])
-
-#         # updatedBillProduct = BillProductInfoSerilizer(instance = oldBillProduct, data = billProduct)
-#         # if updatedBillProduct.is_valid():
-#         #     updatedBillProduct.save()
-#         # else:
-#         #     return Response(updatedBillProduct.error_messages)
-
-#         # #update product
-#         # oldProduct = Product.objects.get(productId =product['productId'])
-#         # updatedProduct = ProductSerilizer(instance = oldProduct, data = product)
-#         # if updatedProduct.is_valid():
-#         #     updatedProduct.save()
-#         # else:
-#         #     return Response(updatedProduct.error_messages)
-
-#     newBill = GenerateBillSerilizer(oldCustomer, many=False)
-#    return Response(newBill.data)
-
-# @api_view(['POST'])
-# def billUpdate(request):
-#     # print(data)
-#     oldCustomer = Customer.objects.get(customerId = request.data['customerId'])
-#     print(request.data)
-#     print("->>")
-#     print()
-#     # # print(oldCustomer)
-#     # bill = Bill.objects.get()
-#     # # updatedBill = UpdateExistingBillSerilizer(instance=data['customerId'], data = data)
-#     updatedBill = UpdateExistingBillSerilizer(instance=oldCustomer, data = request.data)
-#     print("0909")
-#     if updatedBill.is_valid():
-#         print("0101")
-#         updatedBill.save()
-#         print("0202")
-#         print(updatedBill.instance)
-#         # print(updatedBill.data)
-#         return Response(updatedBill.data)
-#     return Response(updatedBill.error_messages)BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
-

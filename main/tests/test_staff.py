@@ -104,8 +104,8 @@ class TestStaff(APITestCase):
             authenticate(self)
 
             data ={
-                  "staffName": "rohan",
-                  "address": "Baglung",
+                  "staffName": 3242342,
+                  "address": 234234,
                   "phone": "9884768698",
                   "email": 'wetwerwerwerwerwe',
                   "registrationDate": "2022-02-15"
@@ -113,7 +113,9 @@ class TestStaff(APITestCase):
 
             response = self.client.post(reverse('staff-register'),data)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertTrue(response.data['email'],'Enter a valid email address.')
+            self.assertTrue(response.data['address'],'address is invalid.')
+            self.assertTrue(response.data['staffName'],'staffName is invalid.')
+            self.assertTrue(response.data['email'],'email is invalid.')
 
 
             data ={
@@ -141,7 +143,9 @@ class TestStaff(APITestCase):
             self.assertTrue(response.data,'rohan is already registed !!')
 
             data ={
-                  "phone": "9884768986",
+                  "staffName": "rohan",
+                  "address": "Baglung",
+                  "phone": "9884768698",
                   "email": 'rohan@gmail.com',
                   "registrationDate": "2022-02-15"
             }
@@ -250,6 +254,10 @@ class TestStaff(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(response.data, 'Ankit deregisted sucessfully !!')
 
+            response = self.client.delete('/api/staff/delete/')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data, 'staffId not found !!')
+
       def test_assign_work(self):
             authenticate(self)
             data ={
@@ -280,7 +288,6 @@ class TestStaff(APITestCase):
                   "givenWeight": 12,
                   "lossWeight": 0,
                   "orderProduct": 1,
-                  "staffWorkId": 1,
                   "status": "inprogress",
                   "submittedDate": "2022-04-04",
                   "submittedWeight": 13,
@@ -291,3 +298,28 @@ class TestStaff(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
             self.assertTrue(response.data, "Staff id not found")
 
+
+      def test_assign_work_invalid(self):
+            authenticate(self)
+            data ={
+                  'KDMWeight': 'sdfsd',
+                  "date": "sdfsdfsd",
+                  "finalProductWeight": 'sdfsd',
+                  "givenWeight": 'sdfsdf',
+                  "lossWeight": 'sdfsdfsd',
+                  "orderProduct": 'sdfsdf',
+                  "staff": 1,
+                  "staffWorkId": 1,
+                  "status": "inprogress",
+                  "submittionDate": "2022-04-04",
+                  "totalWeight": 13,
+            }
+            response = self.client.post(reverse('staff-work-assign'), data)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.data[0]['KDMWeight'], 'KDMWeight expect int. ')
+            self.assertEqual(response.data[0]['date'], 'invalid date format. ')
+            self.assertEqual(response.data[0]['finalProductWeight'], 'finalProductWeight expect int.')
+            self.assertEqual(response.data[0]['givenWeight'], 'givenWeight expect int. ')
+            self.assertEqual(response.data[0]['lossWeight'], 'lossWeight expect int. ')
+            self.assertEqual(response.data[0]['orderProduct'], 'Invalid primary key should be in int. ')
+            

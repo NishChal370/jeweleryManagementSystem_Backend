@@ -41,7 +41,6 @@ urlpatterns = [
     path('order/<int:pk>', views.order, name='order'),
     path('orders/summary/',views.orderListSummary, name='orders-list-summary'),
     path('orders-list/',views.getOrders, name='orders-list'),
-    # # path('order-place/', views.placeOrder, name='place-order'),
     path('order/update', views.orderUpdate, name='order-update'),
     path('place-order/', views.generateOrder, name='place-order'),
     path('order-delete/<int:pk>', views.deleteOrder, name='delete-order'),

@@ -22,7 +22,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 class AdminSerilizer(serializers.ModelSerializer):
     class Meta:
         model = User
-        # fields = '__all__'
         fields = ('id', 'username', 'full_name',  'first_name', 'last_name', 'email', 'phone', 'register_date','pan_number', 'profileImage')
 
 
@@ -192,26 +191,6 @@ class OrderSearchSerilizer(serializers.ModelSerializer, APIView):
         searchData['submittedDate'] = "-" if rep['submittedDate'] is None else rep['submittedDate']
         searchData['submittionDate'] = rep['submittionDate']
 
-        
-        # check if all order complete or not
-        # progressList = []
-        # for orderProduct in rep['orderProducts']:
-        #     progressList.append(orderProduct['status'])
-
-        # if len(progressList) >1:
-        #     print(progressList)
-        #     if 'pending' in progressList and 'submitted' in progressList:
-        #         progressList = ['completed']
-        #     else:
-        #         progressList = progressList
-
-        # if rep['submittedDate'] != None:
-        #     progressList = ['completed']
-
-        # searchData['status'] = progressList[0]
-        # if searchData['billId'] != '-':
-        #     searchData['status'] = 'submitted'
-        # else:
         searchData['status'] = rep['status']
 
         return searchData
@@ -603,9 +582,7 @@ class OrderBillSerilizer(serializers.ModelSerializer):
         if 'orderId' not in value:
             
             raise serializers.ValidationError({'message':'orderId is missing'})
-        #elif value['orderId'].status == 'S': // UNCOMMMENT LATER 
 
-            #raise serializers.ValidationError({'message':'Requested order bill is already created'}) // UNCOMMMENT LATER 
         
         return value
 
@@ -789,8 +766,6 @@ class StaffAssignWorkSerilizer(serializers.ModelSerializer):
                 customer = CustomerSerilizer(Customer.objects.get(customerId = order['customerId'])).data
                 # to customer
                 send_Email(customer['email'], 'अर्डर पूरा भएको जानकारी गराउन चाहन्छु |', 'customer', order['date'], customer['name'], order['orderId'])
-                #to admin
-                # send_Email('gitanjaliJewellers00@gmail.com', 'Order complete mail send to customer', 'admin', order['date'], customer['name'], order['orderId'])
 
         return super().update(instance, validated_data)
 
@@ -816,123 +791,3 @@ class StaffSerilizer(serializers.ModelSerializer):
         del rep['staffwork']
 
         return rep
-
-
-
-
-
-# class UpdateExistingBillSerilizer(serializers.ModelSerializer):
-#     # billProduct = BillProductSerilizer(required=False, many=True, read_only=False, allow_null=True )
-#     class Meta:
-#         model = Bill
-#         fields = ('billId', 'orderId', 'customer', 'date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status')
-
-#         # fields = ('billId', 'orderId','date', 'rate', 'billType', 'customerProductWeight', 'customerProductAmount', 'finalWeight', 'grandTotalWeight', 'totalAmount', 'discount', 'grandTotalAmount', 'advanceAmount', 'payedAmount', 'remainingAmount', 'status', 'billProduct','customerId')
-    
-#     # def to_representation(self, instance): # it shows all the customer insted of id
-#     #     rep = super().to_representation(instance)
-#     #     rep['customer'] = CustomerInfoSerilizer(instance.customer.customerId).data
-
-#     #     return rep
-
-#     def update(self, instance, validate_data):
-#         print("FDgdfgdfgdfgdfg")
-#         print("Update")
-#         print(instance)
-#         print()
-#         # validate_data['customer'] = instance['customer']
-#         print(validate_data)
-#         return instance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # """
-# #  # it register customer and add / generate their bill.
-# #  # if customer already register  generate bill for existing customer
-# # """
-# # class GenerateBillSerilizer(serializers.ModelSerializer):
-# #     bills = BillSerilizer(required=False, many=True, read_only=False, allow_null=True)
-# #     class Meta:
-# #         model = Customer
-# #         fields = ('customerId', 'name', 'address', 'phone', 'email', 'bills')
-
-# #     def validate(self, value):
-# #         print(value)
-# #         if 'bills' not in value :
-# #             raise serializers.ValidationError({'message':'Bill is missing.'})
-# #         elif len(value['bills']) < 1:
-# #             raise serializers.ValidationError({'message':'Bill is missing.'})
-
-# #         for bill in value['bills']:
-# #             if 'billProduct' not in bill:
-# #                 raise serializers.ValidationError({'message':'BillProduct is missing.'})
-# #             elif len(bill['billProduct']) < 1:
-# #                 raise serializers.ValidationError({'messsage':'BillProduct is missing.'}) 
-
-# #             for billProduct in bill['billProduct']:
-                
-# #                 if 'product' not in billProduct:
-# #                     raise serializers.ValidationError({'message':'Product is missing.'})
-
-# #         return value
-
-
-# #     def create(self, validated_data):
-# #         bills = validated_data.pop('bills')
-# #         #create customer
-# #         customer = Customer.objects.create(**validated_data) 
-
-# #         for bill in bills :
-# #             billProducts = bill.pop('billProduct')
-# #             #create bill
-# #             newBill = Bill.objects.create(customerId=customer, **bill)
-
-# #             for billProduct in billProducts:
-# #                 product = billProduct.pop('product')
-# #                 #create product
-# #                 newProduct = Product.objects.create(**product)
-# #                 #create billProduct
-# #                 BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
-                
-# #         return customer
-    
-# #     def update(self, instance, validated_data):
-# #         bills = validated_data.pop('bills')
-
-# #         for bill in bills :
-# #             billProducts = bill.pop('billProduct')
-# #             #add bill in for existing customer
-# #             newBill = Bill.objects.create(customerId=instance, **bill)
-
-# #             for billProduct in billProducts:
-# #                 product = billProduct.pop('product')
-# #                 # add product for existing customer
-# #                 newProduct = Product.objects.create(**product)
-# #                 # add billProduct for existing customer
-# #                 BillProduct.objects.create(billId=newBill, productId=newProduct, **billProduct)
-
-# #         return instance

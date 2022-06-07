@@ -49,6 +49,16 @@ class TestAdmin(APITestCase):
             self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertTrue(response.data, 'invalid phone data type')
 
+
+            data={
+                  'username' :'',
+                  'phone' : '',
+            }
+            response = self.client.post(reverse('admin-detail-update'), data)
+            self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertTrue(response.data[0]['username'], 'username is required.')
+            self.assertTrue(response.data[0]['phone'], 'phone is required.')
+
       #done
       def test_change_password(self):
             authenticate(self)

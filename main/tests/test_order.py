@@ -89,11 +89,47 @@ class TestOrder(APITestCase):
                   'address' : "nepal",
                   'phone' : "9805169542",
                   'email' : "np01cp4a190072@islingtoncollege.edu.np",
+                  'order' : [],
             }
 
             response = self.client.post('/api/place-order/', data, format='json')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(response.data['message'][0], 'Order is missing.')
+      
+      #done
+      def test_place_order_invalid(self):
+            authenticate(self)
+
+            data ={
+                  'customerId' : 'wqeqw',
+                  'name' : 23423423,
+                  'address' : 54345345,
+                  'phone' : "9805169542",
+                  'email' : "np01cp4a190072@islingtoncollege.edu.np",
+                  'orders' :[{
+                        'orderId' : 'dsgsd',
+                        'date' : 234234,
+                        'submittionDate' : "2022-04-06",
+                        'type' : 'gold',
+                        'rate': 'werwerwe',
+                        'status' : 'pending',
+                        'orderProducts':[{
+                              'orderProducts' : 1,
+                              'status' :'pending',
+                              'product':{
+                                    'productId':2,
+                                    'productName' : 'earring',
+                                    'netWeight' : 30,
+                                    'gemsName' : 'mooti',
+                                    'gemsPrice' : 4000
+                              }
+                        }]
+
+                  }]
+            }
+
+            response = self.client.post('/api/place-order/', data, format='json')
+
       #done
       def test_update_order(self):
             authenticate(self)
@@ -206,12 +242,45 @@ class TestOrder(APITestCase):
             self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertTrue(response.data, 'Order inprogress')
 
+      def test_update_empty(self):
+            authenticate(self)
+
+            data ={
+                  'customerId' : 1,
+                  'name' : "Hari",
+                  'address' : "nepal",
+                  'phone' : "9805169542",
+                  'email' : "np01cp4a190072@islingtoncollege.edu.np",
+                  'orders' :[{
+                        'orderId' : 1,
+                        'date' : date.today(),
+                        'submittionDate' : "2022-04-06",
+                        'submittedDate' : "2022-04-06",
+                        'type' : '',
+                        'rate': '',
+                        'status' : '',
+                        'orderProducts':[]
+                  }]
+            }
+
+            response = self.client.post('/api/order/update', data, format='json')
+            self.assertTrue(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
       def test_delete_order_by_id(self):
             authenticate(self)
 
             response = self.client.delete('/api/order-delete/1')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertTrue(response.data, {'Order 1 is deleted'})       
+            self.assertTrue(response.data, {'Order 1 is deleted. '})  
+
+            response = self.client.delete('/api/order-delete/')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data, {'orderId not found. '})    
+
+            response = self.client.delete('/api/order-delete/sdfsdf')
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data, {'orderId expect int but got str.'})            
       #done
       def test_get_order_summary(self):
             authenticate(self)
